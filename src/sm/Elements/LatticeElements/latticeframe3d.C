@@ -176,7 +176,7 @@ LatticeFrame3d::computeBmatrixAt(GaussPoint *aGaussPoint, FloatMatrix &answer, i
     answer.at(6, 12) = 1.;
 
     //Peter: Should the B-matrix be divided by the length? You need strain for calculating the Integration point forces. However, later you also use the transpose to calculate nodal forces. Do you need the length in both or only for calculating strain?
-
+    answer.times(1. / this->length);
     return;
 }
 
@@ -242,7 +242,7 @@ LatticeFrame3d::computeStiffnessMatrix(FloatMatrix &answer, MatResponseMode rMod
 
     dbj.beProductOf(d, bj);
     //Peter: I divide this now by the length? However, it might need to go into the Bmatrix. Please check your derivation.
-    dbj.times(1. / length);
+    //dbj.times(1. / length);
     bjt.beTranspositionOf(bj);
     //Peter: No length here? Please check.
     answer.beProductOf(bjt, dbj);
@@ -315,7 +315,7 @@ LatticeFrame3d::giveInternalForcesVector(FloatArray &answer,
         }
         strain.beProductOf(b, u);
 	//Peter: The 1/length is outside the B-matrix, because we use B^T for computing the forces at the nodes.
-	strain.times(1./this->length);
+	//strain.times(1./this->length);
         this->computeStressVector(stress, strain, integrationRulesArray [ 0 ]->getIntegrationPoint(0), tStep);
     }
 
