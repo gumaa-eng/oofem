@@ -44,12 +44,6 @@
 #define _IFT_LatticeCrossSection_Name "latticecs"
 #define _IFT_LatticeCrossSection_Material "material"
 #define _IFT_LatticeCrossSection_area "area"
-#define _IFT_LatticeCrossSection_iy "iy"
-#define _IFT_LatticeCrossSection_iz "iz"
-#define _IFT_LatticeCrossSection_ik "ik"
-#define _IFT_LatticeCrossSection_shearcoeff "shearcoeff"
-#define _IFT_LatticeCrossSection_shearareay "shearareay"
-#define _IFT_LatticeCrossSection_shearareaz "shearareaz"
 #define _IFT_LatticeCrossSection_MaterialNumber "material"
 //@}
 

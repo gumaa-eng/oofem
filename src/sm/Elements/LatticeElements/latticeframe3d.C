@@ -453,31 +453,31 @@ LatticeFrame3d::initializeFrom(InputRecord &ir)
     }
 
     this->area = 0.;
-    IR_GIVE_OPTIONAL_FIELD(ir, area, _IFT_LatticeCrossSection_area);
+    IR_GIVE_OPTIONAL_FIELD(ir, area, _IFT_LatticeFrame3d_area);
 
     this->s = 0.;
     IR_GIVE_OPTIONAL_FIELD(ir, s, _IFT_LatticeFrame3d_s);
 
     this->iy = 0.;
-    IR_GIVE_OPTIONAL_FIELD(ir, this->iy, _IFT_LatticeCrossSection_iy);
+    IR_GIVE_OPTIONAL_FIELD(ir, this->iy, _IFT_LatticeFrame3d_iy);
 
     this->iz = 0.0;
-    IR_GIVE_OPTIONAL_FIELD(ir, this->iz, _IFT_LatticeCrossSection_iz);
+    IR_GIVE_OPTIONAL_FIELD(ir, this->iz, _IFT_LatticeFrame3d_iz);
 
     this->ik = 0.0;
-    IR_GIVE_OPTIONAL_FIELD(ir, this->ik, _IFT_LatticeCrossSection_ik);
+    IR_GIVE_OPTIONAL_FIELD(ir, this->ik, _IFT_LatticeFrame3d_ik);
 
     double beamshearcoeff = 0.0;
-    IR_GIVE_OPTIONAL_FIELD(ir, beamshearcoeff, _IFT_LatticeCrossSection_shearcoeff);
+    IR_GIVE_OPTIONAL_FIELD(ir, beamshearcoeff, _IFT_LatticeFrame3d_shearcoeff);
 
     this->shearareay = 0.0;
-    IR_GIVE_OPTIONAL_FIELD(ir, this->shearareay, _IFT_LatticeCrossSection_shearareay);
+    IR_GIVE_OPTIONAL_FIELD(ir, this->shearareay, _IFT_LatticeFrame3d_shearareay);
     if ( this->shearareay == 0.0 ) {
         this->shearareay = beamshearcoeff * area;
     }
 
     this->shearareaz = 0.0;
-    IR_GIVE_OPTIONAL_FIELD(ir, this->shearareaz, _IFT_LatticeCrossSection_shearareaz);
+    IR_GIVE_OPTIONAL_FIELD(ir, this->shearareaz, _IFT_LatticeFrame3d_shearareaz);
     if ( this->shearareaz == 0.0 ) {
         this->shearareaz = beamshearcoeff * area;
     }
