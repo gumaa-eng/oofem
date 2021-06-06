@@ -75,9 +75,6 @@ LatticeFramePlasticsteel::initializeFrom(InputRecord &ir)
 
     //Poisson's ratio of the material that the beam element is made of
     IR_GIVE_FIELD(ir, this->nu, _IFT_LatticeFramePlasticsteel_n); // Macro
-
-    //Peter: You need to think which other material parameters you will need for your plastic model. I can think of the parameters that are used to normalise the forces in the yield condition (N0, Mx0, My0, Mz0) as well as a yieldtol. Maybe there are more. Add then the corresponding entries at the top of the h-file.
-    
 }
 
 MaterialStatus *
@@ -121,35 +118,16 @@ LatticeFramePlasticsteel::giveThermalDilatationVector(GaussPoint *gp,  TimeStep 
 
 
 FloatArrayF< 6 >
-LatticeFramePlasticsteel::giveFrameForces3d(const FloatArrayF< 6 > &originalstrain,
+LatticeFramePlasticsteel::giveFrameForces3d(const FloatArrayF< 6 > &strain,
                                        GaussPoint *gp,
                                        TimeStep *tStep)
 {
+    //Peter: This needs to be extended. I tried to implement first the elastic case. 
     auto status = static_cast< LatticeMaterialStatus * >( this->giveStatus(gp) );
+
     this->initTempStatus(gp);
-    /*Peter: Here you now need to work on the plastic return. You can check latticedamageplastic how it its done. Check in there perform plasticity return.
-     */
-
-    // First remove thermal strain from the original strain. 
-    auto reducedStrain = originalStrain;
-    auto thermalStrain = this->computeStressIndependentStrainVector(gp, tStep, VM_Total);
-    if ( thermalStrain.giveSize() ) {
-        reducedStrain -= FloatArrayF< 6 >(thermalStrain);
-    }
-
-    /*Peter: Next you need to write the plasticity return. I would suggest to write it as it was done in latticeplasticitydamage in a separate function called performPlasticity return. The steps are 1) compute yield function based on subset of stresses. If larger than yield tolerance, perform return. You need to implement a lot of function such as computeYieldFunction, computeFVector (this stands for dFdSigma), computeMVector (this is DGDSigma, which is in your case not needed because you want to use associated flow, computeDMMatrix (which is for second derivative of F). The name of the functions is up to you. Please follow oofem programming rules, which means that you should give functions names which make sense as much as possible and use captital letters for every new word.  
-     */
-
-    //Peter: Here is an example of a call to the function performPlasticityReturn
-    
-    //    auto stress = this->performPlasticityReturn(gp, reducedStrain, tStep);
-    
-
-    // auto stiffnessMatrix = LatticeFramePlasticsteel::give3dFrameStiffnessMatrix(ElasticStiffness, gp, tStep);
-    // auto stress = dot(stiffnessMatrix, strain);
-
-
-
+    auto stiffnessMatrix = LatticeFramePlasticsteel::give3dFrameStiffnessMatrix(ElasticStiffness, gp, tStep);
+    auto stress = dot(stiffnessMatrix, strain);
     // printf("strain:\n");
     // strain.printYourself();
     // printf("stress:\n");
