@@ -64,7 +64,7 @@ LatticeFrameSteelPlastic::hasMaterialModeCapability(MaterialMode mode) const
     return ( mode == _3dLattice );
 }
 
-
+  //gumaa
 void
 LatticeFrameSteelPlastic::initializeFrom(InputRecord &ir)
 {
@@ -129,6 +129,7 @@ LatticeFrameSteelPlastic::giveStatus(GaussPoint *gp) const
     return status;
 }
 
+  //gumaa
 FloatArrayF< 4 >
 LatticeFrameSteelPlastic::computeFVector(const FloatArrayF< 4 > &stress, GaussPoint *gp, TimeStep *tStep) const
 
@@ -151,7 +152,7 @@ LatticeFrameSteelPlastic::computeFVector(const FloatArrayF< 4 > &stress, GaussPo
     return f;
 }
 
-
+  //gumaa
 FloatMatrixF< 4, 4 >
 LatticeFrameSteelPlastic::computeDMMatrix(const FloatArrayF< 4 > &stress, GaussPoint *gp, TimeStep *tStep) const
 
@@ -207,7 +208,7 @@ LatticeFrameSteelPlastic::giveThermalDilatationVector(GaussPoint *gp,  TimeStep 
     };
 }
 
-
+  //gumaa
 FloatArrayF< 6 >
 LatticeFrameSteelPlastic::giveFrameForces3d(const FloatArrayF< 6 > &originalstrain,
                                        GaussPoint *gp,
@@ -224,7 +225,7 @@ LatticeFrameSteelPlastic::giveFrameForces3d(const FloatArrayF< 6 > &originalstra
     if ( thermalStrain.giveSize() ) {
         reducedStrain -= FloatArrayF< 6 >(thermalStrain);
        }
-
+    //gumaa
     //Subset of reduced strain.
     //shear components are not used for plasticity return
     auto strain = reducedStrain [ { 0, 3, 4, 5 } ];
@@ -313,7 +314,7 @@ LatticeFrameSteelPlastic::giveFrameForces3d(const FloatArrayF< 6 > &originalstra
 
     //Peter: Here is an example of a call to the function performPlasticityReturn
     //    auto stress = this->performPlasticityReturn(gp, reducedStrain, tStep);
-
+  //gumaa
 double
 LatticeFrameSteelPlastic::performRegularReturn(FloatArrayF< 4 > &stress,
                                               double yieldValue,
