@@ -48,10 +48,10 @@
 #define _IFT_LatticeFrameSteelPlastic_talpha "talpha"
 #define _IFT_LatticeFrameSteelPlastic_e "e"
 #define _IFT_LatticeFrameSteelPlastic_n "n"
-#define _IFT_LatticeFrameSteelPlastic_N0 "N0"
-#define _IFT_LatticeFrameSteelPlastic_Mx0 "Mx0"
-#define _IFT_LatticeFrameSteelPlastic_My0 "My0"
-#define _IFT_LatticeFrameSteelPlastic_Mz0 "Mz0"
+#define _IFT_LatticeFrameSteelPlastic_n0 "n0"
+#define _IFT_LatticeFrameSteelPlastic_mx0 "mx0"
+#define _IFT_LatticeFrameSteelPlastic_my0 "my0"
+#define _IFT_LatticeFrameSteelPlastic_mz0 "mz0"
 #define _IFT_LatticeFrameSteelPlastic_tol "tol"
 #define _IFT_LatticeFrameSteelPlastic_iter "iter"
 #define _IFT_LatticeFrameSteelPlastic_sub "sub"
@@ -70,8 +70,39 @@ protected:
     ///Ratio of shear and normal modulus
     double nu;
 
+   ///n0
+    double n0;
+
+   ///mx0
+    double mx0;
+
+   ///my0
+    double my0;
+
+   ///mz0
+    double mz0;
+
+   ///tol
+    double tol;
+
+   ///iter
+    double iter;
+
+   ///sub
+    double sub;
+
+
+
+
 public:
     LatticeFrameSteelPlastic(int n, Domain *d) : LatticeStructuralMaterial(n, d) { };
+
+    FloatArrayF< 4 >computeFVector(const FloatArrayF< 4 > &sigma,
+                                   GaussPoint *gp, TimeStep *tStep) const;
+
+    FloatMatrixF< 4, 4 >computeDMMatrix(const FloatArrayF< 4 > &sigma, 
+                                        GaussPoint *gp, TimeStep *tStep) const;
+
 
 
     FloatArrayF< 6 >giveThermalDilatationVector(GaussPoint *gp,  TimeStep *tStep) const override;

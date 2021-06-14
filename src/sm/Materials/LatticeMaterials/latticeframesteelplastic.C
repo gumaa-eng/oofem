@@ -32,7 +32,7 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include "LatticeFrameSteelPlastic.h"
+#include "latticeframesteelplastic.h"
 #include "latticematstatus.h"
 #include "latticestructuralmaterial.h"
 #include "gausspoint.h"
@@ -77,25 +77,25 @@ LatticeFrameSteelPlastic::initializeFrom(InputRecord &ir)
     IR_GIVE_FIELD(ir, this->nu, _IFT_LatticeFrameSteelPlastic_n); // Macro
 
     //N0
-    IR_GIVE_FIELD(ir, this->N0, _IFT_LatticeFrameSteelPlastic_N0); // Macro
+    IR_GIVE_FIELD(ir, this->n0, _IFT_LatticeFrameSteelPlastic_n0); // Macro
 
     //Mx0
-    IR_GIVE_FIELD(ir, this->Mx0, _IFT_LatticeFrameSteelPlastic_Mx0); // Macro
+    IR_GIVE_FIELD(ir, this->mx0, _IFT_LatticeFrameSteelPlastic_mx0); // Macro
 
     //My0
-    IR_GIVE_FIELD(ir, this->My0, _IFT_LatticeFrameSteelPlastic_My0); // Macro
+    IR_GIVE_FIELD(ir, this->my0, _IFT_LatticeFrameSteelPlastic_my0); // Macro
 
     //Mz0
-    IR_GIVE_FIELD(ir, this->Mz0, _IFT_LatticeFrameSteelPlastic_Mz0); // Macro
+    IR_GIVE_FIELD(ir, this->mz0, _IFT_LatticeFrameSteelPlastic_mz0); // Macro
 
-    Tol== 1.e-6;
-    IR_GIVE_FIELD(ir, this->Tol, _IFT_LatticeFrameSteelPlastic_tol); // Macro
+    tol= 1.e-6;
+    IR_GIVE_FIELD(ir, this->tol, _IFT_LatticeFrameSteelPlastic_tol); // Macro
 
-    newtonIter = 100;
-    IR_GIVE_FIELD(ir, this->newtonIter, _IFT_LatticeFrameSteelPlastic_iter); // Macro
+    iter = 100;
+    IR_GIVE_FIELD(ir, this->iter, _IFT_LatticeFrameSteelPlastic_iter); // Macro
 
-    numberOfSubIncrements = 10;
-    IR_GIVE_FIELD(ir, this->numberOfSubIncrements, _IFT_LatticeFrameSteelPlastic_sub); // Macro
+    sub = 10;
+    IR_GIVE_FIELD(ir, this->sub, _IFT_LatticeFrameSteelPlastic_sub); // Macro
 
 
 
@@ -129,6 +129,67 @@ LatticeFrameSteelPlastic::giveStatus(GaussPoint *gp) const
     return status;
 }
 
+FloatArrayF< 4 >
+LatticeFrameSteelPlastic::computeFVector(const FloatArrayF< 4 > &stress, GaussPoint *gp, TimeStep *tStep) const
+
+{
+   
+    double nx = nx;
+    double mx = mx;
+    double my = my;
+    double mz = mz;
+
+    FloatArrayF< 4 >f;
+    {
+        f.at(1) = 2.*(nx/this->n0)*(1/this->n0);
+        f.at(2) = 2.*(mx/this->mx0)*(1/this->mx0);
+        f.at(3) = 2.*(my/this->my0)*(1/this->my0);
+        f.at(4) = 2.*(mz/this->mz0)*(1/this->mz0);
+    
+    }
+
+    return f;
+}
+
+
+FloatMatrixF< 4, 4 >
+LatticeFrameSteelPlastic::computeDMMatrix(const FloatArrayF< 4 > &stress, GaussPoint *gp, TimeStep *tStep) const
+
+{
+    double nx = nx;
+    double mx = mx;
+    double my = my;
+    double mz = mz;
+
+    FloatMatrixF< 4, 4 >dm;
+    { //main ellipse
+        //Derivatives of dGDSig
+        dm.at(1, 1) = 2/pow(this->n0, 2);
+        dm.at(1, 2) = 0;
+        dm.at(1, 3) = 0;
+        dm.at(1, 4) = 0;
+
+        //Derivatives of dGDTau
+        dm.at(2, 1) = 0;
+        dm.at(2, 2) = 2/pow(this->mx0, 2);
+        dm.at(2, 3) = 0;
+        dm.at(2, 4) = 0;
+
+        //Derivates of evolution law
+        dm.at(3, 1) = 0;
+        dm.at(3, 2) = 0;
+        dm.at(3, 3) = 2/pow(this->my0, 2);
+        dm.at(3, 4) = 0;
+
+        //Derivates of evolution law
+        dm.at(4, 1) = 0;
+        dm.at(4, 2) = 0;
+        dm.at(4, 3) = 0;
+        dm.at(4, 3) = 2/pow(this->mz0, 2);
+    } 
+    return dm;
+}
+
 
 FloatArrayF< 6 >
 LatticeFrameSteelPlastic::giveThermalDilatationVector(GaussPoint *gp,  TimeStep *tStep) const
@@ -158,36 +219,41 @@ LatticeFrameSteelPlastic::giveFrameForces3d(const FloatArrayF< 6 > &originalstra
      */
 
     // First remove thermal strain from the original strain. 
-    auto reducedStrain = originalStrain;
+    auto reducedStrain = originalstrain;
     auto thermalStrain = this->computeStressIndependentStrainVector(gp, tStep, VM_Total);
     if ( thermalStrain.giveSize() ) {
         reducedStrain -= FloatArrayF< 6 >(thermalStrain);
+       }
 
-    }
+    //Subset of reduced strain.
+    //shear components are not used for plasticity return
+    auto strain = reducedStrain [ { 0, 3, 4, 5 } ];
+    const double area = ( static_cast< LatticeStructuralElement * >( gp->giveElement() ) )->giveArea();
+    const double iy = ( static_cast< LatticeStructuralElement * >( gp->giveElement() ) )->giveIy();
+    const double iz = ( static_cast< LatticeStructuralElement * >( gp->giveElement() ) )->giveIz();
+    const double ik = ( static_cast< LatticeStructuralElement * >( gp->giveElement() ) )->giveIk();
 
-{
-   
 
     /* Get plastic strain vector from status*/
-    auto tempPlasticStrain = status->givePlasticLatticeStrain() [ { 0, 1, 2, 3 } ];
+    auto tempPlasticStrain = status->givePlasticLatticeStrain() [ { 0, 3, 4, 5 } ];
+    FloatArrayF< 4 >tangent = { this->e*area , this->e*ik, this->e*iy, this->e*iz };
 
-    FloatArrayF< 4 >tangent = { this->eNormalMean, this->alphaOne * this->eNormalMean, this->alphaOne * this->eNormalMean };
     /* Compute trial stress*/
     auto stress = mult(tangent, strain - tempPlasticStrain);
 
     //Introduce variables for subincrementation
     //Only _3dLattice is possible
 
-    auto oldStrain = this->giveReducedStrain(gp, tStep) [ { 0, 1, 2, 3 } ];
+    auto oldStrain = this->giveReducedStrain(gp, tStep) [ { 0, 3, 4, 5 } ];
 
     /* Compute yield value*/
-    double yieldValue = computeYieldValue(stress, tempKappa, gp, tStep);
+    double yieldValue = computeYieldValue(stress, gp, tStep);
     int subIncrementCounter = 0;
 
     /* Check yield condition, i.e. if the yield value is less than the yield tolerance.
      * If yield condition is valid. Do perform regular return (closest point return)*/
 
-    if ( yieldValue / pow(fcLocal, 2.) > yieldTol ) {
+    if ( yieldValue > tol ) {
         // introduce a subincrementation flag
         int subIncrementFlag = 0;
         auto convergedStrain = oldStrain;
@@ -197,6 +263,51 @@ LatticeFrameSteelPlastic::giveFrameForces3d(const FloatArrayF< 6 > &originalstra
         returnResult = RR_NotConverged;
         while ( returnResult == RR_NotConverged || subIncrementFlag == 1 ) {
             stress = mult(tangent, tempStrain - tempPlasticStrain);
+
+            if ( returnResult == RR_NotConverged ) {
+                subIncrementCounter++;
+                if ( sub > numberOfSubIncrements ) {
+                    OOFEM_LOG_INFO("Unstable element %d \n", gp->giveElement()->giveGlobalNumber() );
+                    OOFEM_LOG_INFO("Yield value %e \n", yieldValue);
+                    OOFEM_LOG_INFO("ConvergedStrain value %e %e %e\n", convergedStrain.at(1), convergedStrain.at(2), convergedStrain.at(3), convergedStrain.at(4) );
+                    OOFEM_LOG_INFO("tempStrain value %e %e %e %e\n", tempStrain.at(1), tempStrain.at(2), tempStrain.at(3), tempStrain.at(4) );
+                    OOFEM_LOG_INFO("deltaStrain value %e %e %e %e\n", deltaStrain.at(1), deltaStrain.at(2), deltaStrain.at(3), deltaStrain.at(4) );
+                    OOFEM_LOG_INFO("targetstrain value %e %e %e %e\n", strain.at(1), strain.at(2), strain.at(3), strain.at(4) );
+
+                    OOFEM_ERROR("LatticeFrameSteelPlastic :: performPlasticityReturn - Could not reach convergence with small deltaStrain, giving up.");
+                }
+                printf("subincrementation required\n");
+                subIncrementFlag = 1;
+                deltaStrain *= 0.5;
+                tempStrain = convergedStrain + deltaStrain;
+            } else if ( returnResult == RR_Converged && subIncrementFlag == 1 ) {
+                tempPlasticStrain.at(1) = tempStrain.at(1) - stress.at(1) / (area * this->e);
+                tempPlasticStrain.at(2) = tempStrain.at(2) - stress.at(2) / ( ik * this->e );
+                tempPlasticStrain.at(3) = tempStrain.at(3) - stress.at(3) / ( iy * this->e );
+                tempPlasticStrain.at(4) = tempStrain.at(4) - stress.at(4) / ( iz * this->e );
+
+                status->letTempPlasticLatticeStrainBe(assemble< 6 >(tempPlasticStrain, { 0, 3, 4, 5 }) );
+
+                subIncrementFlag = 0;
+                returnResult = RR_NotConverged;
+                convergedStrain = tempStrain;
+                deltaStrain = strain - convergedStrain;
+                tempStrain = strain;
+                subIncrementCounter = 0;
+            } 
+        }
+    }
+
+
+    tempPlasticStrain.at(1) = strain.at(1) - stress.at(1) / (area * this->e);
+    tempPlasticStrain.at(2) = strain.at(2) - stress.at(2) / ( ik * this->e );
+    tempPlasticStrain.at(3) = strain.at(3) - stress.at(3) / ( iy * this->e );
+    tempPlasticStrain.at(4) = strain.at(4) - stress.at(4) / ( iz * this->e );
+
+    status->letTempPlasticLatticeStrainBe(assemble< 6 >(tempPlasticStrain, { 0, 3, 4, 5  }) );
+
+    return answer;
+}
     /*Peter: Next you need to write the plasticity return. I would suggest to write it as it was done in latticeplasticitydamage in a separate function called performPlasticity return. The steps are 1) compute yield function based on subset of stresses. If larger than yield tolerance, perform return. You need to implement a lot of function such as computeYieldFunction, computeFVector (this stands for dFdSigma), computeMVector (this is DGDSigma, which is in your case not needed because you want to use associated flow, computeDMMatrix (which is for second derivative of F). The name of the functions is up to you. Please follow oofem programming rules, which means that you should give functions names which make sense as much as possible and use captital letters for every new word.  
      */
 
@@ -209,35 +320,32 @@ LatticeFrameSteelPlastic::performRegularReturn(FloatArrayF< 4 > &stress,
                                               GaussPoint *gp,
                                               TimeStep *tStep) const
 {
-   // double fcLocal =  giveCompressiveStrength(gp, tStep);
-
-    auto status = static_cast< LatticeFrameSteelPlasticStatus * >( this->giveStatus(gp) );
+    
 
     double deltaLambda = 0.;
 
     auto trialStress = stress;
     auto tempStress = trialStress;
 
-    //double trialShearStressNorm = norm(trialStress [ { 1, 2 } ]);
+    double trialStress = trialStress [ { 1, 2, 3, 4 } ]);
 
-    //double tempShearStressNorm = trialShearStressNorm;
+    double tempStress = trialStress;
 
-    //double thetaTrial = atan2(stress.at(3), stress.at(2) );
 
-   
     //initialise unknowns
     FloatArrayF< 4 >unknowns;
-    unknowns.at(1) = trialStress.at(1);
-    //unknowns.at(2) = trialShearStressNorm;
-    //unknowns.at(3) = tempKappa;
-    unknowns.at(4) = 0.;
+    unknowns.at(1) =           .at(1);
+    unknowns.at(2) =           .at(2);
+    unknowns.at(3) =           .at(3);
+    unknowns.at(4) =           .at(4);
+    unknowns.at(5) = 0;
 
     // Look at the magnitudes of the residuals. You have to scale the yieldValue down.
     yieldValue = computeYieldValue(tempStress, tempKappa, gp, tStep);
 
     //initiate residuals
-    FloatArrayF< 4 >residuals;
-    residuals.at(4) = yieldValue;
+    FloatArrayF< 5 >residuals;
+    residuals.at(5) = yieldValue;
 
     double normOfResiduals  = 1.; //just to get into the loop
 
@@ -249,12 +357,14 @@ LatticeFrameSteelPlastic::performRegularReturn(FloatArrayF< 4 > &stress,
             return 0.;
         }
 
-        //Normalize residuals. Think about it more.
+          //Normalize residuals. Think about it more.
         FloatArrayF< 4 >residualsNorm;
-        residualsNorm.at(1) = residuals.at(1) / fcLocal;
-        residualsNorm.at(2) = residuals.at(2) / fcLocal;
+        residualsNorm.at(1) = residuals.at(1);
+        residualsNorm.at(2) = residuals.at(2);
         residualsNorm.at(3) = residuals.at(3);
-        residualsNorm.at(4) = residuals.at(4) / pow(fcLocal, 2.);
+        residualsNorm.at(4) = residuals.at(4);
+        residualsNorm.at(5) = residuals.at(5);
+
 
         normOfResiduals = norm(residualsNorm);
 
@@ -264,39 +374,16 @@ LatticeFrameSteelPlastic::performRegularReturn(FloatArrayF< 4 > &stress,
             return 0.;
         }
 
-        if ( normOfResiduals > yieldTol ) {
-            // Test to run newton iteration using inverse of Jacobian
-            auto jacobian = computeJacobian(tempStress, tempKappa, deltaLambda, gp, tStep);
-
-            auto solution = solve_check(jacobian, residuals);
-            if ( solution.first ) {
-                unknowns -= solution.second;
-            } else {
-                returnResult = RR_NotConverged;
-                return kappa;
-            }
-
-            unknowns.at(2) = max(unknowns.at(2), 0.); //Keep rho greater than zero!
-            unknowns.at(3) = max(unknowns.at(3), kappa); //Keep deltaKappa greater than zero!
-            unknowns.at(4) = max(unknowns.at(4), 0.); //Keep deltaLambda greater than zero!
-
-            /* Update increments final values and DeltaLambda*/
-            tempStress.at(1) = unknowns.at(1);
-            //tempShearStressNorm = unknowns.at(2);
-
-            tempStress.at(2) = tempShearStressNorm * cos(thetaTrial);
-            tempStress.at(3) = tempShearStressNorm * sin(thetaTrial);
-
-            //tempKappa = unknowns.at(3);
-            deltaLambda = unknowns.at(4);
-
+       
             /* Compute the mVector holding the derivatives of the g function and the hardening function*/
             auto mVector = computeMVector(tempStress, tempKappa, gp, tStep);
 
-            residuals.at(1) = tempStress.at(1) - trialStress.at(1) + this->eNormalMean * deltaLambda * mVector.at(1);
-            residuals.at(2) = tempShearStressNorm - trialShearStressNorm + this->alphaOne * this->eNormalMean * deltaLambda * mVector.at(2);
-            //residuals.at(3) = -tempKappa + kappa + deltaLambda * mVector.at(3);
-            residuals.at(4) = computeYieldValue(tempStress, tempKappa, gp, tStep);
+            residuals.at(1) = tempStress.at(1) - trialStress.at(1) + this->e * deltaLambda * fVector.at(1);
+            residuals.at(2) = tempStress.at(2) - trialStress.at(2) + ik*this->e * deltaLambda * fVector.at(2);
+            residuals.at(3) = tempStress.at(3) - trialStress.at(3) + iy*this->e * deltaLambda * fVector.at(3);
+            residuals.at(4) = tempStress.at(4) - trialStress.at(4) + iz*this->e * deltaLambda * fVector.at(4);
+            residuals.at(5) = computeYieldValue(tempStress, gp, tStep);
+
         }
     }
 
@@ -304,7 +391,7 @@ LatticeFrameSteelPlastic::performRegularReturn(FloatArrayF< 4 > &stress,
 
     stress = tempStress;
 
-    return tempKappa;
+    
 }
 
 
@@ -317,11 +404,9 @@ LatticeFrameSteelPlastic::performRegularReturn(FloatArrayF< 4 > &stress,
     // strain.printYourself();
     // printf("stress:\n");
     // stress.printYourself();
+
     status->letTempLatticeStrainBe(strain);
     status->letTempLatticeStressBe(stress);
-
-    return stress;
-}
 
 
 Interface *
@@ -360,4 +445,4 @@ LatticeFrameSteelPlastic::give3dFrameStiffnessMatrix(MatResponseMode rmode, Gaus
  
     return diag(d);
 }
-}
+
