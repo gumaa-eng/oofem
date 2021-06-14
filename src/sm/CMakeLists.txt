@@ -282,7 +282,7 @@ set (sm_material
     Materials/LatticeMaterials/latticeslip.C
     Materials/LatticeMaterials/latticeplasticitydamageviscoelastic.C
     Materials/LatticeMaterials/latticeframeelastic.C
-    Materials/LatticeMaterials/latticeframeplasticsteel.C
+    Materials/LatticeMaterials/latticeframesteelplastic.C
 )
 
     
