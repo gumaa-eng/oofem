@@ -206,6 +206,7 @@ LatticeFrameSteelPlastic::giveThermalDilatationVector(GaussPoint *gp,  TimeStep 
 // caused by unit temperature in direction of
 // gp (element) local axes
 //
+//  
 {
     double alpha = this->give(tAlpha, gp);
 
