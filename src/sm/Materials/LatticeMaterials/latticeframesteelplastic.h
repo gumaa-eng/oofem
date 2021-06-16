@@ -32,8 +32,8 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifndef LatticeFrameSteelPlastic_h
-#define LatticeFrameSteelPlastic_h
+#ifndef latticeframesteelplastic_h
+#define latticeframesteelplastic_h
 
 #include "latticestructuralmaterial.h"
 #include "cltypes.h"
@@ -44,11 +44,11 @@
 
 ///@name Input fields for LatticeFrameSteelPlastic
 //@{
-#define _IFT_LatticeFrameSteelPlastic_Name "latticeframesteelplastic"
+#define _IFT_LatticeFrameSteelPlastic_Name "LatticeFrameSteelPlastic"
 #define _IFT_LatticeFrameSteelPlastic_talpha "talpha"
 #define _IFT_LatticeFrameSteelPlastic_e "e"
 #define _IFT_LatticeFrameSteelPlastic_n "n"
-#define _IFT_LatticeFrameSteelPlastic_n0 "n0"
+#define _IFT_LatticeFrameSteelPlastic_nx0 "nx0"
 #define _IFT_LatticeFrameSteelPlastic_mx0 "mx0"
 #define _IFT_LatticeFrameSteelPlastic_my0 "my0"
 #define _IFT_LatticeFrameSteelPlastic_mz0 "mz0"
@@ -62,7 +62,9 @@ namespace oofem {
  * This class implements a local random linear elastic model for lattice elements.
  */
 class LatticeFrameSteelPlastic : public LatticeStructuralMaterial
+
 {
+
 protected:
     ///Normal modulus
     double e;
@@ -70,8 +72,8 @@ protected:
     ///Ratio of shear and normal modulus
     double nu;
 
-   ///n0
-    double n0;
+   ///nx0
+    double nx0;
 
    ///mx0
     double mx0;
@@ -83,29 +85,37 @@ protected:
     double mz0;
 
    ///tol
-    double tol;
+    double yieldTol;
 
    ///iter
-    double iter;
+    double newtonIter;
 
    ///sub
-    double sub;
+    double numberOfSubIncrements;
 
+    enum LatticePlasticityDamage_ReturnResult { RR_NotConverged, RR_Converged };
+    mutable LatticePlasticityDamage_ReturnResult returnResult = RR_NotConverged; /// FIXME: This must be removed. Not thread safe. Shouldn't be stored at all.
+
+    double initialYieldStress = 0.;
 
 
 
 public:
     LatticeFrameSteelPlastic(int n, Domain *d) : LatticeStructuralMaterial(n, d) { };
 
-    FloatArrayF< 4 >computeFVector(const FloatArrayF< 4 > &sigma,
-                                   GaussPoint *gp, TimeStep *tStep) const;
+    FloatArrayF< 4 >computeFVector(const FloatArrayF< 4 > &sigma, GaussPoint *gp, TimeStep *tStep) const;
 
-    FloatMatrixF< 4, 4 >computeDMMatrix(const FloatArrayF< 4 > &sigma, 
-                                        GaussPoint *gp, TimeStep *tStep) const;
-
-
+    FloatMatrixF< 4, 4 >computeDMMatrix(const FloatArrayF< 4 > &sigma, GaussPoint *gp, TimeStep *tStep) const;
 
     FloatArrayF< 6 >giveThermalDilatationVector(GaussPoint *gp,  TimeStep *tStep) const override;
+
+    FloatArrayF< 6 >giveReducedLatticeStrain(GaussPoint *gp, TimeStep *tStep) const;
+
+    FloatArrayF< 6 >performPlasticityReturn(GaussPoint *gp, const FloatArrayF< 6 > &reducedStrain, TimeStep *tStep) const;
+
+    double performRegularReturn(FloatArrayF< 4 > &stress, double yieldValue, GaussPoint *gp, TimeStep *tStep) const;
+
+    double computeYieldValue(const FloatArrayF< 4 > &sigma, GaussPoint *gp, TimeStep *tStep) const;
 
     const char *giveInputRecordName() const override { return _IFT_LatticeFrameSteelPlastic_Name; }
 
@@ -116,14 +126,12 @@ public:
 
     bool isCharacteristicMtrxSymmetric(MatResponseMode rMode) const override { return false; }
 
-    FloatArrayF< 6 >giveFrameForces3d(const FloatArrayF< 6 > &strain, GaussPoint *gp, TimeStep *tStep) override;
 
     FloatMatrixF< 6, 6 >give3dFrameStiffnessMatrix(MatResponseMode rMode, GaussPoint *gp, TimeStep *tStep) const override;
 
 
     bool hasMaterialModeCapability(MaterialMode mode) const override;
 
-    Interface *giveInterface(InterfaceType) override;
 
     MaterialStatus *CreateStatus(GaussPoint *gp) const override;
 
