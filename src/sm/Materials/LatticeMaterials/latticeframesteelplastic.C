@@ -33,6 +33,7 @@
  */
 
 #include "latticeframesteelplastic.h"
+#include "latticeframeelastic.h"
 #include "latticematstatus.h"
 #include "latticestructuralmaterial.h"
 #include "gausspoint.h"
@@ -134,7 +135,7 @@ LatticeFrameSteelPlastic::computeYieldValue(const FloatArrayF< 4 > &stress,
     double mz = stress [ { 4 } ];
 
    { 
-        yieldValue = pow((nx/nx0), 2.) + pow((mx/this->mx0), 2.) + pow((my/my0), 2.) + pow((mz/this->mz0), 2.);
+        yieldValue = pow(nx/this->nx0, 2.) + pow(mx/this->mx0, 2.) + pow(my/this->my0, 2.) + pow(mz/this->mz0, 2.) - 1.;
     } 
 
     return yieldValue;
@@ -155,8 +156,8 @@ LatticeFrameSteelPlastic::computeFVector(const FloatArrayF< 4 > &stress,
     
     FloatArrayF< 4 >f;
     {
-        f.at(1) = 2.*(nx/this->nx0)*(1/this->nx0);
-        f.at(2) = 2.*(mx/this->mx0)*(1/this->mx0);
+      f.at(1) = 2.*nx/pow(this->nx0,2.);
+      f.at(2) = 2.*mx/pow(this->mx0,2.);
         f.at(3) = 2.*(my/this->my0)*(1/this->my0);
         f.at(4) = 2.*(mz/this->mz0)*(1/this->mz0);
     
@@ -172,14 +173,14 @@ LatticeFrameSteelPlastic::computeDMMatrix(const FloatArrayF< 4 > &stress, GaussP
     FloatMatrixF< 4, 4 >dm;
     {
         //Derivatives of dGDSig
-        dm.at(1, 1) = 2/pow(this->nx0, 2);
+        dm.at(1, 1) = 2./pow(this->nx0, 2.);
         dm.at(1, 2) = 0;
         dm.at(1, 3) = 0;
         dm.at(1, 4) = 0;
 
         //Derivatives of dGDTau
         dm.at(2, 1) = 0;
-        dm.at(2, 2) = 2/pow(this->mx0, 2);
+        dm.at(2, 2) = 2./pow(this->mx0, 2.);
         dm.at(2, 3) = 0;
         dm.at(2, 4) = 0;
 
@@ -276,7 +277,7 @@ LatticeFrameSteelPlastic::performPlasticityReturn(GaussPoint *gp,
 
                     OOFEM_ERROR("LatticeFrameSteelPlastic :: performPlasticityReturn - Could not reach convergence with small deltaStrain, giving up.");
                 }
-                printf("subincrementation required\n");
+		printf("subincrementation required\n");
                 subIncrementFlag = 1;
                 deltaStrain *= 0.5;
                 tempStrain = convergedStrain + deltaStrain;
@@ -301,7 +302,36 @@ LatticeFrameSteelPlastic::performPlasticityReturn(GaussPoint *gp,
 
 }
 
-double
+Interface *
+LatticeFrameSteelPlastic::giveInterface(InterfaceType type)
+{
+    return nullptr;
+}
+
+FloatArrayF< 6 >
+LatticeFrameSteelPlastic::giveFrameForces3d(const FloatArrayF< 6 > &strain,
+                                       GaussPoint *gp,
+                                       TimeStep *tStep)
+{
+    //Peter: This needs to be extended. I tried to implement first the elastic case. 
+    auto status = static_cast< LatticeMaterialStatus * >( this->giveStatus(gp) );
+
+    this->initTempStatus(gp);
+    auto stiffnessMatrix = LatticeFrameSteelPlastic::give3dFrameStiffnessMatrix(ElasticStiffness, gp, tStep);
+    auto stress = dot(stiffnessMatrix, strain);
+    // printf("strain:\n");
+    // strain.printYourself();
+    // printf("stress:\n");
+    // stress.printYourself();
+    status->letTempLatticeStrainBe(strain);
+    status->letTempLatticeStressBe(stress);
+
+    return stress;
+}
+
+
+
+void
 LatticeFrameSteelPlastic::performRegularReturn(FloatArrayF< 4 > &stress,
                                               double yieldValue,
                                               GaussPoint *gp,
@@ -315,25 +345,25 @@ LatticeFrameSteelPlastic::performRegularReturn(FloatArrayF< 4 > &stress,
     auto trialStress = stress;
     auto tempStress = trialStress;
 
-    double trialStressNorm = norm(trialStress [ { 0, 3, 4, 5 } ]);
-    double tempStressNorm = trialStressNorm;
+    //    double trialStressNorm = norm(trialStress [ { 0, 3, 4, 5 } ]);
+    //    double tempStressNorm = trialStressNorm;
 
 
   
     //initialise unknowns
-    FloatArrayF< 4 >unknowns;
-    unknowns.at(0) = trialStress.at(0);
+    FloatArrayF< 5 >unknowns;
+    unknowns.at(1) = trialStress.at(1);
+    unknowns.at(2) = trialStress.at(2);
     unknowns.at(3) = trialStress.at(3);
     unknowns.at(4) = trialStress.at(4);
-    unknowns.at(5) = trialStress.at(5);
-    unknowns.at(6) = 0.;
+    unknowns.at(5) = 0.;
 
     // Look at the magnitudes of the residuals. You have to scale the yieldValue down.
     yieldValue = computeYieldValue(tempStress, gp, tStep);
 
     //initiate residuals
     FloatArrayF< 5 >residuals;
-    residuals.at(6) = yieldValue;
+    residuals.at(5) = yieldValue;
 
     double normOfResiduals  = 1.; //just to get into the loop
 
@@ -342,15 +372,15 @@ LatticeFrameSteelPlastic::performRegularReturn(FloatArrayF< 4 > &stress,
         iterationCount++;
         if ( iterationCount == newtonIter ) {
             returnResult = RR_NotConverged;
-            return 0.;
+            return;
         }
 
         //Normalize normOfResiduals. Think about it more.
         FloatArrayF< 5 >residualsNorm;
-        residualsNorm.at(1) = residuals.at(1);
-        residualsNorm.at(2) = residuals.at(2);
-        residualsNorm.at(3) = residuals.at(3);
-        residualsNorm.at(4) = residuals.at(4);
+        residualsNorm.at(1) = residuals.at(1)/this->nx0;
+        residualsNorm.at(2) = residuals.at(2)/this->mx0;
+        residualsNorm.at(3) = residuals.at(3)/this->my0;
+        residualsNorm.at(4) = residuals.at(4)/this->mz0;
         residualsNorm.at(5) = residuals.at(5);
 
 
@@ -358,7 +388,7 @@ LatticeFrameSteelPlastic::performRegularReturn(FloatArrayF< 4 > &stress,
         //First check if return has failed
         if ( std::isnan(normOfResiduals) ) {
             returnResult = RR_NotConverged;
-            return 0.;
+            return;
         }
 
         if ( normOfResiduals > yieldTol ) {
@@ -397,7 +427,7 @@ LatticeFrameSteelPlastic::performRegularReturn(FloatArrayF< 4 > &stress,
     returnResult = RR_Converged;
 
     stress = tempStress;
-
+    
 }
 
 
