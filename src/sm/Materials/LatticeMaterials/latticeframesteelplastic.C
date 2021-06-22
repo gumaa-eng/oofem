@@ -99,7 +99,7 @@ LatticeFrameSteelPlastic::initializeFrom(InputRecord &ir)
     IR_GIVE_FIELD(ir, this->numberOfSubIncrements, _IFT_LatticeFrameSteelPlastic_sub); // Macro
 
 }
-
+  //
 MaterialStatus *
 LatticeFrameSteelPlastic::CreateStatus(GaussPoint *gp) const
 {

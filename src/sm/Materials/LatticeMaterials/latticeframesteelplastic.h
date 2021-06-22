@@ -99,6 +99,7 @@ protected:
     double initialYieldStress = 0.;
 
     //
+    //
 
 public:
     LatticeFrameSteelPlastic(int n, Domain *d) : LatticeStructuralMaterial(n, d) { };
