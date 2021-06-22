@@ -99,10 +99,6 @@ protected:
     double initialYieldStress = 0.;
 
     //
-<<<<<<< HEAD
-    //
-=======
->>>>>>> 7a49499062e42a19921a4c58a33eff98081c7a63
 
 public:
     LatticeFrameSteelPlastic(int n, Domain *d) : LatticeStructuralMaterial(n, d) { };
@@ -123,13 +119,10 @@ public:
   
     double computeYieldValue(const FloatArrayF< 4 > &sigma, GaussPoint *gp, TimeStep *tStep) const;
 
-<<<<<<< HEAD
     FloatMatrixF< 5, 5 >computeJacobian(const FloatArrayF< 4 > &sigma, const double deltaLambda, GaussPoint *gp, TimeStep *tStep) const;
 
     FloatArrayF< 6 >giveLatticeStress3d(const FloatArrayF< 6 > &originalStrain, GaussPoint *gp, TimeStep *tStep) override;
 
-=======
->>>>>>> 7a49499062e42a19921a4c58a33eff98081c7a63
     const char *giveInputRecordName() const override { return _IFT_LatticeFrameSteelPlastic_Name; }
 
     const char *giveClassName() const override { return "LatticeFrameSteelPlastic"; }
