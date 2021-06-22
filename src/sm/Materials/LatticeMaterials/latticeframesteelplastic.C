@@ -99,7 +99,11 @@ LatticeFrameSteelPlastic::initializeFrom(InputRecord &ir)
     IR_GIVE_FIELD(ir, this->numberOfSubIncrements, _IFT_LatticeFrameSteelPlastic_sub); // Macro
 
 }
+<<<<<<< HEAD
   //
+=======
+
+>>>>>>> 7a49499062e42a19921a4c58a33eff98081c7a63
 MaterialStatus *
 LatticeFrameSteelPlastic::CreateStatus(GaussPoint *gp) const
 {
@@ -158,8 +162,13 @@ LatticeFrameSteelPlastic::computeFVector(const FloatArrayF< 4 > &stress,
     {
       f.at(1) = 2.*nx/pow(this->nx0,2.);
       f.at(2) = 2.*mx/pow(this->mx0,2.);
+<<<<<<< HEAD
       f.at(3) = 2.*my/pow(this->my0,2.);
       f.at(4) = 2.*mz/pow(this->mz0,2.);
+=======
+        f.at(3) = 2.*(my/this->my0)*(1/this->my0);
+        f.at(4) = 2.*(mz/this->mz0)*(1/this->mz0);
+>>>>>>> 7a49499062e42a19921a4c58a33eff98081c7a63
     
     }
 
@@ -187,14 +196,22 @@ LatticeFrameSteelPlastic::computeDMMatrix(const FloatArrayF< 4 > &stress, GaussP
         //Derivates of evolution law
         dm.at(3, 1) = 0;
         dm.at(3, 2) = 0;
+<<<<<<< HEAD
         dm.at(3, 3) = 2./pow(this->my0, 2.);
+=======
+        dm.at(3, 3) = 2/pow(this->my0, 2);
+>>>>>>> 7a49499062e42a19921a4c58a33eff98081c7a63
         dm.at(3, 4) = 0;
 
         //Derivates of evolution law
         dm.at(4, 1) = 0;
         dm.at(4, 2) = 0;
         dm.at(4, 3) = 0;
+<<<<<<< HEAD
         dm.at(4, 3) = 2./pow(this->mz0, 2.);
+=======
+        dm.at(4, 3) = 2/pow(this->mz0, 2);
+>>>>>>> 7a49499062e42a19921a4c58a33eff98081c7a63
     } 
     return dm;
 }
@@ -392,6 +409,7 @@ LatticeFrameSteelPlastic::performRegularReturn(FloatArrayF< 4 > &stress,
         }
 
         if ( normOfResiduals > yieldTol ) {
+<<<<<<< HEAD
           // Test to run newton iteration using inverse of Jacobian
             auto jacobian = computeJacobian(tempStress, deltaLambda, gp, tStep);
 
@@ -402,6 +420,10 @@ LatticeFrameSteelPlastic::performRegularReturn(FloatArrayF< 4 > &stress,
                 returnResult = RR_NotConverged;
             }
 
+=======
+
+           
+>>>>>>> 7a49499062e42a19921a4c58a33eff98081c7a63
             unknowns.at(1) = max(unknowns.at(1), 0.);
             unknowns.at(2) = max(unknowns.at(2), 0.); //Keep rho greater than zero!
             unknowns.at(3) = max(unknowns.at(3), 0.);
@@ -438,6 +460,7 @@ LatticeFrameSteelPlastic::performRegularReturn(FloatArrayF< 4 > &stress,
     
 }
 
+<<<<<<< HEAD
 FloatMatrixF< 5, 5 >
 LatticeFrameSteelPlastic::computeJacobian(const FloatArrayF< 4 > &stress,
                                          const double deltaLambda,
@@ -511,6 +534,8 @@ LatticeFrameSteelPlastic::giveLatticeStress3d(const FloatArrayF< 6 > &originalSt
     return stress;
 }
 
+=======
+>>>>>>> 7a49499062e42a19921a4c58a33eff98081c7a63
 
 FloatMatrixF< 6, 6 >
 LatticeFrameSteelPlastic::give3dFrameStiffnessMatrix(MatResponseMode rmode, GaussPoint *gp, TimeStep *atTime) const

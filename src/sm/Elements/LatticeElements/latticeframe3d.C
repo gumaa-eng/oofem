@@ -78,6 +78,7 @@ LatticeFrame3d::computeBmatrixAt(GaussPoint *aGaussPoint, FloatMatrix &answer, i
 
     //Peter: Wherever we use the length, we need to make sure that we have computed it.
     this->length = computeLength();
+    //this->s = computes();
 
     //Normal displacement jump in x-direction
     //First node
@@ -102,14 +103,14 @@ LatticeFrame3d::computeBmatrixAt(GaussPoint *aGaussPoint, FloatMatrix &answer, i
     answer.at(2, 3) =  0.;
     answer.at(2, 4) = 0.;
     answer.at(2, 5) = 0;
-    answer.at(2, 6) = -this->length / 2.;
+    answer.at(2, 6) = -this->length*(1-this->s)/2.;
     //Second node
     answer.at(2, 7) = 0.;
     answer.at(2, 8) = 1.;
     answer.at(2, 9) =  0.;
     answer.at(2, 10) = 0.;
     answer.at(2, 11) = 0;
-    answer.at(2, 12) = -this->length / 2.;
+    answer.at(2, 12) = -this->length*(1+this->s)/2.;
 
     //Shear displacement jump in z-plane
     //first node
@@ -117,14 +118,14 @@ LatticeFrame3d::computeBmatrixAt(GaussPoint *aGaussPoint, FloatMatrix &answer, i
     answer.at(3, 2) = 0.;
     answer.at(3, 3) = -1.;
     answer.at(3, 4) = 0.;
-    answer.at(3, 5) = this->length / 2.;
+    answer.at(3, 5) = this->length*(1-this->s)/2.;
     answer.at(3, 6) = 0.;
     //Second node
     answer.at(3, 7) = 0.;
     answer.at(3, 8) = 0.;
     answer.at(3, 9) =  1.;
     answer.at(3, 10) = 0.;
-    answer.at(3, 11) = this->length / 2.;
+    answer.at(3, 11) = this->length*(1+this->s)/2.;
     answer.at(3, 12) = 0.;
 
     //Rotation around x-axis
@@ -176,7 +177,7 @@ LatticeFrame3d::computeBmatrixAt(GaussPoint *aGaussPoint, FloatMatrix &answer, i
     answer.at(6, 12) = 1.;
 
     //Peter: Should the B-matrix be divided by the length? You need strain for calculating the Integration point forces. However, later you also use the transpose to calculate nodal forces. Do you need the length in both or only for calculating strain?
-
+    //answer.times(1. / this->length);
     return;
 }
 
@@ -242,7 +243,7 @@ LatticeFrame3d::computeStiffnessMatrix(FloatMatrix &answer, MatResponseMode rMod
 
     dbj.beProductOf(d, bj);
     //Peter: I divide this now by the length? However, it might need to go into the Bmatrix. Please check your derivation.
-    dbj.times(1. / length);
+     dbj.times(1. / length);
     bjt.beTranspositionOf(bj);
     //Peter: No length here? Please check.
     answer.beProductOf(bjt, dbj);
@@ -452,28 +453,31 @@ LatticeFrame3d::initializeFrom(InputRecord &ir)
     }
 
     this->area = 0.;
-    IR_GIVE_OPTIONAL_FIELD(ir, area, _IFT_LatticeCrossSection_area);
+    IR_GIVE_OPTIONAL_FIELD(ir, area, _IFT_LatticeFrame3d_area);
+
+    this->s = 0.;
+    IR_GIVE_OPTIONAL_FIELD(ir, s, _IFT_LatticeFrame3d_s);
 
     this->iy = 0.;
-    IR_GIVE_OPTIONAL_FIELD(ir, this->iy, _IFT_LatticeCrossSection_iy);
+    IR_GIVE_OPTIONAL_FIELD(ir, this->iy, _IFT_LatticeFrame3d_iy);
 
     this->iz = 0.0;
-    IR_GIVE_OPTIONAL_FIELD(ir, this->iz, _IFT_LatticeCrossSection_iz);
+    IR_GIVE_OPTIONAL_FIELD(ir, this->iz, _IFT_LatticeFrame3d_iz);
 
     this->ik = 0.0;
-    IR_GIVE_OPTIONAL_FIELD(ir, this->ik, _IFT_LatticeCrossSection_ik);
+    IR_GIVE_OPTIONAL_FIELD(ir, this->ik, _IFT_LatticeFrame3d_ik);
 
     double beamshearcoeff = 0.0;
-    IR_GIVE_OPTIONAL_FIELD(ir, beamshearcoeff, _IFT_LatticeCrossSection_shearcoeff);
+    IR_GIVE_OPTIONAL_FIELD(ir, beamshearcoeff, _IFT_LatticeFrame3d_shearcoeff);
 
     this->shearareay = 0.0;
-    IR_GIVE_OPTIONAL_FIELD(ir, this->shearareay, _IFT_LatticeCrossSection_shearareay);
+    IR_GIVE_OPTIONAL_FIELD(ir, this->shearareay, _IFT_LatticeFrame3d_shearareay);
     if ( this->shearareay == 0.0 ) {
         this->shearareay = beamshearcoeff * area;
     }
 
     this->shearareaz = 0.0;
-    IR_GIVE_OPTIONAL_FIELD(ir, this->shearareaz, _IFT_LatticeCrossSection_shearareaz);
+    IR_GIVE_OPTIONAL_FIELD(ir, this->shearareaz, _IFT_LatticeFrame3d_shearareaz);
     if ( this->shearareaz == 0.0 ) {
         this->shearareaz = beamshearcoeff * area;
     }

@@ -43,6 +43,14 @@
 #define _IFT_LatticeFrame3d_refnode "refnode"
 #define _IFT_LatticeFrame3d_refangle "refangle"
 #define _IFT_LatticeFrame3d_zaxis "zaxis"
+#define _IFT_LatticeFrame3d_s "s"
+#define _IFT_LatticeFrame3d_area "area"
+#define _IFT_LatticeFrame3d_iy "iy"
+#define _IFT_LatticeFrame3d_iz "iz"
+#define _IFT_LatticeFrame3d_ik "ik"
+#define _IFT_LatticeFrame3d_shearcoeff "shearcoeff"
+#define _IFT_LatticeFrame3d_shearareay "shearareay"
+#define _IFT_LatticeFrame3d_shearareaz "shearareaz"
 
 //@}
 
@@ -61,7 +69,7 @@ protected:
     double length = 0.;
     double iy, iz, ik;
     double area, shearareay, shearareaz;
-
+    double s;
     FloatMatrix localCoordinateSystem;
 
     FloatArray midPoint, globalCentroid, normal;
