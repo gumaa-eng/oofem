@@ -93,8 +93,8 @@ protected:
    ///sub
     double numberOfSubIncrements;
 
-    enum LatticePlasticityDamage_ReturnResult { RR_NotConverged, RR_Converged };
-    mutable LatticePlasticityDamage_ReturnResult returnResult = RR_NotConverged; /// FIXME: This must be removed. Not thread safe. Shouldn't be stored at all.
+    enum LatticeFrameSteelPlastic_ReturnResult { RR_NotConverged, RR_Converged };
+    mutable LatticeFrameSteelPlastic_ReturnResult returnResult = RR_NotConverged; /// FIXME: This must be removed. Not thread safe. Shouldn't be stored at all.
 
     double initialYieldStress = 0.;
 
@@ -111,17 +111,21 @@ public:
 
     FloatArrayF< 6 >giveReducedLatticeStrain(GaussPoint *gp, TimeStep *tStep) const;
 
+    virtual FloatArrayF< 6 >giveReducedStrain(GaussPoint *gp, TimeStep *tStep) const;
+
     FloatArrayF< 6 >performPlasticityReturn(GaussPoint *gp, const FloatArrayF< 6 > &reducedStrain, TimeStep *tStep) const;
 
     void performRegularReturn(FloatArrayF< 4 > &stress, double yieldValue, GaussPoint *gp, TimeStep *tStep) const;
 
-    FloatArrayF< 6 >giveFrameForces3d(const FloatArrayF< 6 > &strain, GaussPoint *gp, TimeStep *tStep) override;
+    //FloatArrayF< 6 >giveFrameForces3d(const FloatArrayF< 6 > &jump, GaussPoint *gp, TimeStep *tStep) override;
   
     double computeYieldValue(const FloatArrayF< 4 > &sigma, GaussPoint *gp, TimeStep *tStep) const;
 
     FloatMatrixF< 5, 5 >computeJacobian(const FloatArrayF< 4 > &sigma, const double deltaLambda, GaussPoint *gp, TimeStep *tStep) const;
 
-    FloatArrayF< 6 >giveLatticeStress3d(const FloatArrayF< 6 > &originalStrain, GaussPoint *gp, TimeStep *tStep) override;
+    //double give(int aProperty, GaussPoint *gp) const override;
+
+    FloatArrayF< 6 >giveFrameForces3d(const FloatArrayF< 6 > &strain, GaussPoint *gp, TimeStep *tStep) override;
 
     const char *giveInputRecordName() const override { return _IFT_LatticeFrameSteelPlastic_Name; }
 
