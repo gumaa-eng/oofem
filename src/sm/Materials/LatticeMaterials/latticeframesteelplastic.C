@@ -92,7 +92,7 @@ LatticeFrameSteelPlastic::initializeFrom(InputRecord &ir)
     yieldTol = 1.e-6;;
     IR_GIVE_FIELD(ir, this->yieldTol, _IFT_LatticeFrameSteelPlastic_tol); // Macro
 
-    newtonIter = 100;
+    this->newtonIter = 100;
     IR_GIVE_FIELD(ir, this->newtonIter, _IFT_LatticeFrameSteelPlastic_iter); // Macro
 
     numberOfSubIncrements = 10;
@@ -226,12 +226,15 @@ LatticeFrameSteelPlastic::giveReducedStrain(GaussPoint *gp, TimeStep *tStep) con
 FloatArrayF< 6 >
 LatticeFrameSteelPlastic::performPlasticityReturn(GaussPoint *gp, const FloatArrayF< 6 > &reducedStrain, TimeStep *tStep) const
 {
+
+  
     const double area = ( static_cast< LatticeStructuralElement * >( gp->giveElement() ) )->giveArea();
     const double iy = ( static_cast< LatticeStructuralElement * >( gp->giveElement() ) )->giveIy();
     const double iz = ( static_cast< LatticeStructuralElement * >( gp->giveElement() ) )->giveIz();
     const double ik = ( static_cast< LatticeStructuralElement * >( gp->giveElement() ) )->giveIk();
-    
-    auto status = static_cast< LatticeMaterialStatus * >( this->giveStatus(gp) );
+
+    //Peter: Use the material specific status
+    auto status = static_cast< LatticeFrameSteelPlasticStatus * >( this->giveStatus(gp) );
 
     //Peter: If you write "return" then the function returns something and leaves. This does not make sence 
     //     return status->giveReducedLatticeStrain();
@@ -268,11 +271,15 @@ LatticeFrameSteelPlastic::performPlasticityReturn(GaussPoint *gp, const FloatArr
         auto tempStrain = strain;
         auto deltaStrain = strain - oldStrain;
         //To get into the loop
-        returnResult = RR_NotConverged;
-        while ( returnResult == RR_NotConverged || subIncrementFlag == 1 ) {
+	status->letTempReturnResultBe(LatticeFrameSteelPlastic::RR_NotConverged);
+        while ( status->giveTempReturnResult() == RR_NotConverged || subIncrementFlag == 1 ) {
             stress = mult(tangent, tempStrain - tempPlasticStrain);
 
-            if ( returnResult == RR_NotConverged ) {
+	    //	Peter: You need to perform the regular return. This is the main function that carries out the stress return.
+	    // Without the call to this function nothing happens.
+	    performRegularReturn(stress,yieldValue,gp,tStep);
+	    
+            if ( status->giveTempReturnResult() == RR_NotConverged ) {
                 subIncrementCounter++;
                 if ( subIncrementCounter > numberOfSubIncrements ) {
                     OOFEM_LOG_INFO("Unstable element %d \n", gp->giveElement()->giveGlobalNumber() );
@@ -288,7 +295,7 @@ LatticeFrameSteelPlastic::performPlasticityReturn(GaussPoint *gp, const FloatArr
                 subIncrementFlag = 1;
                 deltaStrain *= 0.5;
                 tempStrain = convergedStrain + deltaStrain;
-            } else if ( returnResult == RR_Converged && subIncrementFlag == 1 ) {
+            } else if ( status->giveTempReturnResult() == RR_Converged && subIncrementFlag == 1 ) {
                 tempPlasticStrain.at(1) = tempStrain.at(1) - stress.at(1) / (area * e);
                 tempPlasticStrain.at(2) = tempStrain.at(2) - stress.at(2) / ( ik * e );
                 tempPlasticStrain.at(3) = tempStrain.at(3) - stress.at(3) / ( iy * e );
@@ -297,7 +304,8 @@ LatticeFrameSteelPlastic::performPlasticityReturn(GaussPoint *gp, const FloatArr
                 status->letTempPlasticLatticeStrainBe(assemble< 6 >(tempPlasticStrain, { 0, 3, 4, 5 }) );
 
                 subIncrementFlag = 0;
-                returnResult = RR_NotConverged;
+
+		status->letTempReturnResultBe(LatticeFrameSteelPlastic::RR_NotConverged);
                 convergedStrain = tempStrain;
                 deltaStrain = strain - convergedStrain;
                 tempStrain = strain;
@@ -341,13 +349,13 @@ LatticeFrameSteelPlastic::giveInterface(InterfaceType type)
 
 
 void
-LatticeFrameSteelPlastic::performRegularReturn(FloatArrayF< 4 > &stress,
+LatticeFrameSteelPlastic::performRegularReturn(FloatArrayF< 4 > &stress,					       
                                               double yieldValue,
                                               GaussPoint *gp,
                                               TimeStep *tStep) const
 {
-   
-    //auto status = static_cast< LatticeMaterialStatus * >( this->giveStatus(gp) );
+  //Use material specific status
+  auto status = static_cast< LatticeFrameSteelPlasticStatus * >( this->giveStatus(gp) );
 
     double deltaLambda = 0.;
 
@@ -380,8 +388,8 @@ LatticeFrameSteelPlastic::performRegularReturn(FloatArrayF< 4 > &stress,
     while ( normOfResiduals > yieldTol ) {
         iterationCount++;
         if ( iterationCount == newtonIter ) {
-            returnResult = RR_NotConverged;
-            return;
+	  status->letTempReturnResultBe(LatticeFrameSteelPlasticStatus::RR_NotConverged);
+	  return;
         }
 
         //Normalize normOfResiduals. Think about it more.
@@ -396,8 +404,8 @@ LatticeFrameSteelPlastic::performRegularReturn(FloatArrayF< 4 > &stress,
         normOfResiduals = norm(residualsNorm);
         //First check if return has failed
         if ( std::isnan(normOfResiduals) ) {
-            returnResult = RR_NotConverged;
-            return;
+	  status->letTempReturnResultBe(LatticeFrameSteelPlasticStatus::RR_NotConverged);
+	  return;
         }
 
         if ( normOfResiduals > yieldTol ) {
@@ -408,13 +416,9 @@ LatticeFrameSteelPlastic::performRegularReturn(FloatArrayF< 4 > &stress,
             if ( solution.first ) {
                 unknowns -= solution.second;
             } else {
-                returnResult = RR_NotConverged;
+                 status->letTempReturnResultBe(LatticeFrameSteelPlastic::RR_NotConverged);
             }
-
-	    // unknowns.at(1) = max(unknowns.at(1), 0.);
-            unknowns.at(2) = max(unknowns.at(2), 0.); //Keep rho greater than zero!
-            unknowns.at(3) = max(unknowns.at(3), 0.);
-            unknowns.at(4) = max(unknowns.at(4), 0.);
+	    //Peter: Only deltalambda must be larger than zero. All the others can be nonzero.
             unknowns.at(5) = max(unknowns.at(5), 0.); //Keep deltaLambda greater than zero!
 
             /* Update increments final values and DeltaLambda*/
@@ -441,7 +445,7 @@ LatticeFrameSteelPlastic::performRegularReturn(FloatArrayF< 4 > &stress,
         }
     }
 
-    returnResult = RR_Converged;
+    status->letTempReturnResultBe(LatticeFrameSteelPlastic::RR_Converged);;
 
     stress = tempStress;
     
@@ -552,4 +556,19 @@ LatticeFrameSteelPlastic::give3dFrameStiffnessMatrix(MatResponseMode rmode, Gaus
  
     return diag(d);
 }
+
+LatticeFrameSteelPlasticStatus::LatticeFrameSteelPlasticStatus(int n, Domain *d, GaussPoint *g) :  LatticeMaterialStatus(g)
+{ }
+void
+LatticeFrameSteelPlasticStatus::printOutputAt(FILE *file, TimeStep *tStep) const
+{
+    LatticeMaterialStatus::printOutputAt(file, tStep);
+
+    fprintf(file, "plasticStrains ");
+    for ( double s : this->plasticLatticeStrain ) {
+        fprintf(file, "% .8e ", s);
+    }
+
+}
+
 }

@@ -58,7 +58,53 @@
 //@}
 
 namespace oofem {
+
 /**
+ * This class implements associated Material Status to LatticePlasticityDamage.
+ * @authors: Gumaa Abdelrhim, Peter Grassl
+ */
+  
+class LatticeFrameSteelPlasticStatus : public LatticeMaterialStatus
+{
+
+public:
+
+    enum state_flag_values {
+        LatticeFrameSteelPlastic_Elastic,
+        LatticeFrameSteelPlastic_Unloading,
+        LatticeFrameSteelPlastic_Plastic,
+    };
+
+  
+  enum LatticeFrameSteelPlastic_ReturnResult {
+        RR_NotConverged,
+        RR_Converged
+    };
+
+
+protected:
+
+    int tempReturnResult = LatticeFrameSteelPlasticStatus::RR_NotConverged;
+
+  
+
+public:
+
+    /// Constructor
+    LatticeFrameSteelPlasticStatus(int n, Domain *d, GaussPoint *g);
+
+
+    void printOutputAt(FILE *file, TimeStep *tStep) const override;
+
+    const char *giveClassName() const override { return "LatticeFrameSteelPlasticStatus"; }
+
+    void letTempReturnResultBe(const int result) { tempReturnResult = result; }
+
+  int giveTempReturnResult() const { return tempReturnResult; }
+};
+
+
+  /**
  * This class implements a local random linear elastic model for lattice elements.
  */
 class LatticeFrameSteelPlastic : public LatticeStructuralMaterial
@@ -94,7 +140,7 @@ protected:
     double numberOfSubIncrements;
 
     enum LatticeFrameSteelPlastic_ReturnResult { RR_NotConverged, RR_Converged };
-    mutable LatticeFrameSteelPlastic_ReturnResult returnResult = RR_NotConverged; /// FIXME: This must be removed. Not thread safe. Shouldn't be stored at all.
+  //    mutable LatticeFrameSteelPlastic_ReturnResult returnResult = RR_NotConverged; /// FIXME: This must be removed. Not thread safe. Shouldn't be stored at all.
 
     double initialYieldStress = 0.;
 
