@@ -128,11 +128,11 @@ LatticeFrameSteelPlastic::computeYieldValue(const FloatArrayF< 4 > &stress,
                                            GaussPoint *gp,
                                            TimeStep *tStep) const
 {
-    double yieldValue = 0;
-    double nx = stress [ { 1 } ];
-    double mx = stress [ { 2 } ];
-    double my = stress [ { 3 } ];
-    double mz = stress [ { 4 } ];
+    double yieldValue = 0.;
+    double nx = stress.at(1);
+    double mx = stress.at(2);
+    double my = stress.at(3);
+    double mz = stress.at(4);
 
    { 
         yieldValue = pow(nx/this->nx0, 2.) + pow(mx/this->mx0, 2.) + pow(my/this->my0, 2.) + pow(mz/this->mz0, 2.) - 1.;
@@ -149,21 +149,20 @@ LatticeFrameSteelPlastic::computeFVector(const FloatArrayF< 4 > &stress,
                                         TimeStep *tStep) const
 {
    
-    double nx = stress [ { 1 } ];
-    double mx = stress [ { 2 } ];
-    double my = stress [ { 3 } ];
-    double mz = stress [ { 4 } ];
+  double nx = stress.at(1);
+  double mx = stress.at(2);
+  double my = stress.at(3);
+  double mz = stress.at(4);
     
-    FloatArrayF< 4 >f;
-    {
-      f.at(1) = 2.*nx/pow(this->nx0,2.);
-      f.at(2) = 2.*mx/pow(this->mx0,2.);
-      f.at(3) = 2.*my/pow(this->my0,2.);
-      f.at(4) = 2.*mz/pow(this->mz0,2.);
-    
-    }
+  FloatArrayF< 4 > f;
 
-    return f;
+ 
+  f.at(1) = 2.*nx/pow(this->nx0,2.);
+  f.at(2) = 2.*mx/pow(this->mx0,2.);
+  f.at(3) = 2.*my/pow(this->my0,2.);
+  f.at(4) = 2.*mz/pow(this->mz0,2.);
+    
+  return f;
 }
 
 FloatMatrixF< 4, 4 >
@@ -171,31 +170,32 @@ LatticeFrameSteelPlastic::computeDMMatrix(const FloatArrayF< 4 > &stress, GaussP
 {
    
     FloatMatrixF< 4, 4 >dm;
-    {
-        //Derivatives of dGDSig
-        dm.at(1, 1) = 2./pow(this->nx0, 2.);
-        dm.at(1, 2) = 0;
-        dm.at(1, 3) = 0;
-        dm.at(1, 4) = 0;
 
-        //Derivatives of dGDTau
-        dm.at(2, 1) = 0;
-        dm.at(2, 2) = 2./pow(this->mx0, 2.);
-        dm.at(2, 3) = 0;
-        dm.at(2, 4) = 0;
+    
+    //Derivatives of dGDSig
+    dm.at(1, 1) = 2./pow(this->nx0, 2.);
+    dm.at(1, 2) = 0;
+    dm.at(1, 3) = 0;
+    dm.at(1, 4) = 0;
 
-        //Derivates of evolution law
-        dm.at(3, 1) = 0;
-        dm.at(3, 2) = 0;
-        dm.at(3, 3) = 2./pow(this->my0, 2.);
-        dm.at(3, 4) = 0;
+    //Derivatives of dGDTau
+    dm.at(2, 1) = 0;
+    dm.at(2, 2) = 2./pow(this->mx0, 2.);
+    dm.at(2, 3) = 0;
+    dm.at(2, 4) = 0;
 
-        //Derivates of evolution law
-        dm.at(4, 1) = 0;
-        dm.at(4, 2) = 0;
-        dm.at(4, 3) = 0;
-        dm.at(4, 3) = 2./pow(this->mz0, 2.);
-    } 
+    //Derivates of evolution law
+    dm.at(3, 1) = 0;
+    dm.at(3, 2) = 0;
+    dm.at(3, 3) = 2./pow(this->my0, 2.);
+    dm.at(3, 4) = 0;
+
+    //Derivates of evolution law
+    dm.at(4, 1) = 0;
+    dm.at(4, 2) = 0;
+    dm.at(4, 3) = 0;
+    dm.at(4, 3) = 2./pow(this->mz0, 2.);
+
     return dm;
 }
 
@@ -232,7 +232,9 @@ LatticeFrameSteelPlastic::performPlasticityReturn(GaussPoint *gp, const FloatArr
     const double ik = ( static_cast< LatticeStructuralElement * >( gp->giveElement() ) )->giveIk();
     
     auto status = static_cast< LatticeMaterialStatus * >( this->giveStatus(gp) );
-     return status->giveReducedLatticeStrain();
+
+    //Peter: If you write "return" then the function returns something and leaves. This does not make sence 
+    //     return status->giveReducedLatticeStrain();
 
     //Subset of reduced strain.
     //Shear components are not used for plasticity return
@@ -249,7 +251,8 @@ LatticeFrameSteelPlastic::performPlasticityReturn(GaussPoint *gp, const FloatArr
     //Introduce variables for subincrementation
     //Only _3dLattice is possible
 
-    auto oldStrain = this->giveReducedLatticeStrain(gp, tStep) [ { 0, 3, 4, 5 } ];
+    //Peter: This was giveReducedLatticeStrain which did not work
+    auto oldStrain = this->giveReducedStrain(gp, tStep) [ { 0, 3, 4, 5 } ];
 
     /* Compute yield value*/
     double yieldValue = computeYieldValue(stress, gp, tStep);
