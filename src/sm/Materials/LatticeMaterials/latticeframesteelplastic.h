@@ -13,7 +13,6 @@
  *               Copyright (C) 1993 - 2019   Borek Patzak
  *
  *
- *
  *       Czech Technical University, Faculty of Civil Engineering,
  *   Department of Structural Mechanics, 166 29 Prague, Czech Republic
  *
