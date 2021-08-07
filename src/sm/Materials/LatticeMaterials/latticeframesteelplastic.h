@@ -60,7 +60,11 @@
 namespace oofem {
 
 /**
+<<<<<<< HEAD
  * This class implements associated Material Status to LatticeFrameSteelPlastic.
+=======
+ * This class implements associated Material Status to LatticePlasticityDamage.
+>>>>>>> 717f88b0ad3286b8b1e1e4c9c0f8411056d5a425
  * @authors: Gumaa Abdelrhim, Peter Grassl
  */
   
@@ -69,7 +73,11 @@ class LatticeFrameSteelPlasticStatus : public LatticeMaterialStatus
 
 public:
 
+<<<<<<< HEAD
    enum state_flag_values {
+=======
+    enum state_flag_values {
+>>>>>>> 717f88b0ad3286b8b1e1e4c9c0f8411056d5a425
         LatticeFrameSteelPlastic_Elastic,
         LatticeFrameSteelPlastic_Unloading,
         LatticeFrameSteelPlastic_Plastic,
@@ -100,7 +108,11 @@ public:
 
     void letTempReturnResultBe(const int result) { tempReturnResult = result; }
 
+<<<<<<< HEAD
     int giveTempReturnResult() const { return tempReturnResult; }
+=======
+  int giveTempReturnResult() const { return tempReturnResult; }
+>>>>>>> 717f88b0ad3286b8b1e1e4c9c0f8411056d5a425
 };
 
 
@@ -144,7 +156,11 @@ protected:
     double plasticFlag;
 
     enum LatticeFrameSteelPlastic_ReturnResult { RR_NotConverged, RR_Converged };
+<<<<<<< HEAD
    //   mutable LatticeFrameSteelPlastic_ReturnResult returnResult = RR_NotConverged; /// FIXME: This must be removed. Not thread safe. Shouldn't be stored at all.
+=======
+  //    mutable LatticeFrameSteelPlastic_ReturnResult returnResult = RR_NotConverged; /// FIXME: This must be removed. Not thread safe. Shouldn't be stored at all.
+>>>>>>> 717f88b0ad3286b8b1e1e4c9c0f8411056d5a425
 
     double initialYieldStress = 0.;
 
