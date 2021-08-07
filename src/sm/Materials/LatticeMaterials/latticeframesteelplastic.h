@@ -55,10 +55,57 @@
 #define _IFT_LatticeFrameSteelPlastic_tol "tol"
 #define _IFT_LatticeFrameSteelPlastic_iter "iter"
 #define _IFT_LatticeFrameSteelPlastic_sub "sub"
+#define _IFT_LatticeFrameSteelPlastic_plastic "plastic"
 //@}
 
 namespace oofem {
+
 /**
+ * This class implements associated Material Status to LatticeFrameSteelPlastic.
+ * @authors: Gumaa Abdelrhim, Peter Grassl
+ */
+  
+class LatticeFrameSteelPlasticStatus : public LatticeMaterialStatus
+{
+
+public:
+
+   enum state_flag_values {
+        LatticeFrameSteelPlastic_Elastic,
+        LatticeFrameSteelPlastic_Unloading,
+        LatticeFrameSteelPlastic_Plastic,
+    };
+
+  
+  enum LatticeFrameSteelPlastic_ReturnResult {
+        RR_NotConverged,
+        RR_Converged
+    };
+
+
+protected:
+
+    int tempReturnResult = LatticeFrameSteelPlasticStatus::RR_NotConverged;
+
+  
+
+public:
+
+    /// Constructor
+    LatticeFrameSteelPlasticStatus(int n, Domain *d, GaussPoint *g);
+
+
+    void printOutputAt(FILE *file, TimeStep *tStep) const override;
+
+    const char *giveClassName() const override { return "LatticeFrameSteelPlasticStatus"; }
+
+    void letTempReturnResultBe(const int result) { tempReturnResult = result; }
+
+    int giveTempReturnResult() const { return tempReturnResult; }
+};
+
+
+  /**
  * This class implements a local random linear elastic model for lattice elements.
  */
 class LatticeFrameSteelPlastic : public LatticeStructuralMaterial
@@ -66,35 +113,39 @@ class LatticeFrameSteelPlastic : public LatticeStructuralMaterial
 {
 
 protected:
-    ///Normal modulus
+    
+   ///Normal modulus
     double e;
 
-    ///Ratio of shear and normal modulus
+   ///Ratio of shear and normal modulus
     double nu;
 
-   ///nx0
+   ///maximum axial force in x-axis x-axis nx0
     double nx0;
 
-   ///mx0
+   ///maximum  bending moment about x-axis mx0
     double mx0;
 
-   ///my0
+   ///maximum  bending moment about x-axis my0
     double my0;
 
-   ///mz0
+   ///maximum  bending moment about x-axis mz0
     double mz0;
 
-   ///tol
+   /// yield tolerance
     double yieldTol;
 
-   ///iter
+   /// maximum number of iterations for stress return
     double newtonIter;
 
-   ///sub
+   ///number Of SubIncrements
     double numberOfSubIncrements;
+   
+   ///plastic flag
+    double plasticFlag;
 
     enum LatticeFrameSteelPlastic_ReturnResult { RR_NotConverged, RR_Converged };
-    mutable LatticeFrameSteelPlastic_ReturnResult returnResult = RR_NotConverged; /// FIXME: This must be removed. Not thread safe. Shouldn't be stored at all.
+   //   mutable LatticeFrameSteelPlastic_ReturnResult returnResult = RR_NotConverged; /// FIXME: This must be removed. Not thread safe. Shouldn't be stored at all.
 
     double initialYieldStress = 0.;
 
@@ -116,14 +167,10 @@ public:
     FloatArrayF< 6 >performPlasticityReturn(GaussPoint *gp, const FloatArrayF< 6 > &reducedStrain, TimeStep *tStep) const;
 
     void performRegularReturn(FloatArrayF< 4 > &stress, double yieldValue, GaussPoint *gp, TimeStep *tStep) const;
-
-    //FloatArrayF< 6 >giveFrameForces3d(const FloatArrayF< 6 > &jump, GaussPoint *gp, TimeStep *tStep) override;
   
     double computeYieldValue(const FloatArrayF< 4 > &sigma, GaussPoint *gp, TimeStep *tStep) const;
 
     FloatMatrixF< 5, 5 >computeJacobian(const FloatArrayF< 4 > &sigma, const double deltaLambda, GaussPoint *gp, TimeStep *tStep) const;
-
-    //double give(int aProperty, GaussPoint *gp) const override;
 
     FloatArrayF< 6 >giveFrameForces3d(const FloatArrayF< 6 > &strain, GaussPoint *gp, TimeStep *tStep) override;
 
@@ -133,16 +180,13 @@ public:
 
     void initializeFrom(InputRecord &ir) override;
 
-
     bool isCharacteristicMtrxSymmetric(MatResponseMode rMode) const override { return false; }
 
     Interface *giveInterface(InterfaceType) override;
   
     FloatMatrixF< 6, 6 >give3dFrameStiffnessMatrix(MatResponseMode rMode, GaussPoint *gp, TimeStep *tStep) const override;
 
-
     bool hasMaterialModeCapability(MaterialMode mode) const override;
-
 
     MaterialStatus *CreateStatus(GaussPoint *gp) const override;
 
