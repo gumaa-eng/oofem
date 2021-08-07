@@ -13,10 +13,8 @@
  *               Copyright (C) 1993 - 2019   Borek Patzak
  *
  *
-<<<<<<< HEAD
-=======
  *
->>>>>>> 717f88b0ad3286b8b1e1e4c9c0f8411056d5a425
+ *
  *       Czech Technical University, Faculty of Civil Engineering,
  *   Department of Structural Mechanics, 166 29 Prague, Czech Republic
  *
@@ -57,14 +55,7 @@ namespace oofem {
 
   // constructor which creates a dummy material without a status and without random extension interface
   // LatticeFrameSteelPlastic :: LatticeFrameSteelPlastic(int n, Domain *d) :
-<<<<<<< HEAD
   // LatticeStructuralMaterial(n, d)
-=======
-  //     LatticeStructuralMaterial(n, d)
-  // {}
-
-
->>>>>>> 717f88b0ad3286b8b1e1e4c9c0f8411056d5a425
   bool
   LatticeFrameSteelPlastic::hasMaterialModeCapability(MaterialMode mode) const
   {
@@ -104,11 +95,8 @@ namespace oofem {
     numberOfSubIncrements = 10;
     IR_GIVE_FIELD(ir, this->numberOfSubIncrements, _IFT_LatticeFrameSteelPlastic_sub); // Macro
 
-<<<<<<< HEAD
     this->plasticFlag = 1;
     IR_GIVE_OPTIONAL_FIELD(ir, plasticFlag, _IFT_LatticeFrameSteelPlastic_plastic); // Macro 
-=======
->>>>>>> 717f88b0ad3286b8b1e1e4c9c0f8411056d5a425
   }
 
   MaterialStatus *
@@ -124,11 +112,7 @@ namespace oofem {
     // test
     MaterialStatus *status = static_cast< MaterialStatus * >( gp->giveMaterialStatus() );
     if ( !status ) {
-<<<<<<< HEAD
     // create a new one
-=======
-      // create a new one
->>>>>>> 717f88b0ad3286b8b1e1e4c9c0f8411056d5a425
       status = this->CreateStatus(gp);
 
       if ( status ) {
@@ -157,11 +141,6 @@ namespace oofem {
     return yieldValue;
   }
 
-<<<<<<< HEAD
-=======
-
-
->>>>>>> 717f88b0ad3286b8b1e1e4c9c0f8411056d5a425
   FloatArrayF< 4 >
   LatticeFrameSteelPlastic::computeFVector(const FloatArrayF< 4 > &stress,
 					   GaussPoint *gp,
@@ -174,10 +153,6 @@ namespace oofem {
     double mz = stress.at(4);
     
     FloatArrayF< 4 > f;
-<<<<<<< HEAD
-=======
-
->>>>>>> 717f88b0ad3286b8b1e1e4c9c0f8411056d5a425
  
     f.at(1) = 2.*nx/pow(this->nx0,2.);
     f.at(2) = 2.*mx/pow(this->mx0,2.);
@@ -192,10 +167,6 @@ namespace oofem {
   {
    
     FloatMatrixF< 4, 4 >dm;
-<<<<<<< HEAD
-=======
-
->>>>>>> 717f88b0ad3286b8b1e1e4c9c0f8411056d5a425
     
     //Derivatives of dGDSig
     dm.at(1, 1) = 2./pow(this->nx0, 2.);
@@ -226,22 +197,10 @@ namespace oofem {
 
   FloatArrayF< 6 >
   LatticeFrameSteelPlastic::giveThermalDilatationVector(GaussPoint *gp,  TimeStep *tStep) const
-<<<<<<< HEAD
   // returns a FloatArray(6) of initial strain vector caused by unit temperature in direction of gp (element) local axes
   {
     double alpha = this->give(tAlpha, gp);
 
-=======
-  //
-  // returns a FloatArray(6) of initial strain vector
-  // caused by unit temperature in direction of
-  // gp (element) local axes
-  //  
-  {
-    double alpha = this->give(tAlpha, gp);
-
-
->>>>>>> 717f88b0ad3286b8b1e1e4c9c0f8411056d5a425
     return {
       alpha, 0., 0., 0., 0., 0.
 	};
@@ -259,11 +218,7 @@ namespace oofem {
   LatticeFrameSteelPlastic::performPlasticityReturn(GaussPoint *gp, const FloatArrayF< 6 > &reducedStrain, TimeStep *tStep) const
   {
 
-<<<<<<< HEAD
     double g = this->e/(2.*(1.+this->nu));  
-=======
-  
->>>>>>> 717f88b0ad3286b8b1e1e4c9c0f8411056d5a425
     const double area = ( static_cast< LatticeStructuralElement * >( gp->giveElement() ) )->giveArea();
     const double iy = ( static_cast< LatticeStructuralElement * >( gp->giveElement() ) )->giveIy();
     const double iz = ( static_cast< LatticeStructuralElement * >( gp->giveElement() ) )->giveIz();
@@ -273,11 +228,6 @@ namespace oofem {
     auto status = static_cast< LatticeFrameSteelPlasticStatus * >( this->giveStatus(gp) );
 
     //Peter: If you write "return" then the function returns something and leaves. This does not make sence 
-<<<<<<< HEAD
-=======
-    //     return status->giveReducedLatticeStrain();
-
->>>>>>> 717f88b0ad3286b8b1e1e4c9c0f8411056d5a425
     //Subset of reduced strain.
     //Shear components are not used for plasticity return
     auto strain = reducedStrain [ { 0, 3, 4, 5 } ];
@@ -285,21 +235,13 @@ namespace oofem {
     /* Get plastic strain vector from status*/
     auto tempPlasticStrain = status->givePlasticLatticeStrain() [ { 0, 3, 4, 5 } ];
 
-<<<<<<< HEAD
     FloatArrayF< 4 >tangent = { area*this->e, ik *g, iy * this->e, iz * this->e };
-=======
-    FloatArrayF< 4 >tangent = { area * this->e, ik * this->e, iy * this->e, iz * this->e };
->>>>>>> 717f88b0ad3286b8b1e1e4c9c0f8411056d5a425
 
     /* Compute trial stress*/
     auto stress = mult(tangent, strain - tempPlasticStrain);
 
     //Introduce variables for subincrementation
     //Only _3dLattice is possible
-<<<<<<< HEAD
-=======
-
->>>>>>> 717f88b0ad3286b8b1e1e4c9c0f8411056d5a425
     //Peter: This was giveReducedLatticeStrain which did not work
     auto oldStrain = this->giveReducedStrain(gp, tStep) [ { 0, 3, 4, 5 } ];
 
@@ -327,7 +269,6 @@ namespace oofem {
 	    
 	if ( status->giveTempReturnResult() == RR_NotConverged ) {
 	  subIncrementCounter++;
-<<<<<<< HEAD
         if ( subIncrementCounter > numberOfSubIncrements ) {
 	   OOFEM_LOG_INFO("Unstable element %d \n", gp->giveElement()->giveGlobalNumber() );
 	   OOFEM_LOG_INFO("Yield value %e \n", yieldValue);
@@ -347,27 +288,6 @@ namespace oofem {
 	  tempPlasticStrain.at(2) = tempStrain.at(2) - stress.at(2) / ( ik * g );
 	  tempPlasticStrain.at(3) = tempStrain.at(3) - stress.at(3) / ( iy * this->e );
 	  tempPlasticStrain.at(4) = tempStrain.at(4) - stress.at(4) / ( iz * this->e );
-=======
-	  if ( subIncrementCounter > numberOfSubIncrements ) {
-	    OOFEM_LOG_INFO("Unstable element %d \n", gp->giveElement()->giveGlobalNumber() );
-	    OOFEM_LOG_INFO("Yield value %e \n", yieldValue);
-	    OOFEM_LOG_INFO("ConvergedStrain value %e %e %e\n", convergedStrain.at(1), convergedStrain.at(2), convergedStrain.at(3), convergedStrain.at(4) );
-	    OOFEM_LOG_INFO("tempStrain value %e %e %e %e\n", tempStrain.at(1), tempStrain.at(2), tempStrain.at(3), tempStrain.at(4) );
-	    OOFEM_LOG_INFO("deltaStrain value %e %e %e %e\n", deltaStrain.at(1), deltaStrain.at(2), deltaStrain.at(3), deltaStrain.at(4) );
-	    OOFEM_LOG_INFO("targetstrain value %e %e %e %e\n", strain.at(1), strain.at(2), strain.at(3), strain.at(4) );
-
-	    OOFEM_ERROR("LatticeFrameSteelPlastic :: performPlasticityReturn - Could not reach convergence with small deltaStrain, giving up.");
-	  }
-	  printf("subincrementation required\n");
-	  subIncrementFlag = 1;
-	  deltaStrain *= 0.5;
-	  tempStrain = convergedStrain + deltaStrain;
-	} else if ( status->giveTempReturnResult() == RR_Converged && subIncrementFlag == 1 ) {
-	  tempPlasticStrain.at(1) = tempStrain.at(1) - stress.at(1) / (area * e);
-	  tempPlasticStrain.at(2) = tempStrain.at(2) - stress.at(2) / ( ik * e );
-	  tempPlasticStrain.at(3) = tempStrain.at(3) - stress.at(3) / ( iy * e );
-	  tempPlasticStrain.at(4) = tempStrain.at(4) - stress.at(4) / ( iz * e );
->>>>>>> 717f88b0ad3286b8b1e1e4c9c0f8411056d5a425
 
 	  status->letTempPlasticLatticeStrainBe(assemble< 6 >(tempPlasticStrain, { 0, 3, 4, 5 }) );
 
@@ -387,7 +307,6 @@ namespace oofem {
     const double shearareaz = ( static_cast< LatticeStructuralElement * >( gp->giveElement() ) )->giveShearAreaZ();
    
 
-<<<<<<< HEAD
     tempPlasticStrain.at(1) = strain.at(1) - stress.at(1) / (area * this->e);
     tempPlasticStrain.at(2) = strain.at(2) - stress.at(2) / ( ik * g );
     tempPlasticStrain.at(3) = strain.at(3) - stress.at(3) / ( iy * this->e );
@@ -398,23 +317,6 @@ namespace oofem {
     auto answer = assemble< 6 >(stress, { 0, 3, 4, 5 });
     answer.at(2) = shearareay * g * reducedStrain.at(2);
     answer.at(3) = shearareaz * g * reducedStrain.at(3);
-=======
-    tempPlasticStrain.at(1) = strain.at(1) - stress.at(1) / (area * e);
-    tempPlasticStrain.at(2) = strain.at(2) - stress.at(2) / ( ik * e );
-    tempPlasticStrain.at(3) = strain.at(3) - stress.at(3) / ( iy * e );
-    tempPlasticStrain.at(4) = strain.at(4) - stress.at(4) / ( iz * e );
-
-   
-    status->letTempPlasticLatticeStrainBe(assemble< 6 >(tempPlasticStrain, { 0, 3, 4, 5 }) );
-
-
-    //    status->letTempLatticeStressBe(assemble< 6 >(stress, { 0, 3, 4, 5 }) );
-
-    auto answer = assemble< 6 >(stress, { 0, 3, 4, 5 });
-    //Peter: Careful! This was wrong. With .at the numbering starts at 1!
-    answer.at(2) = shearareay * this->e * reducedStrain.at(2);
-    answer.at(3) = shearareaz * this->e * reducedStrain.at(3);
->>>>>>> 717f88b0ad3286b8b1e1e4c9c0f8411056d5a425
     
     return answer;
     
@@ -426,12 +328,6 @@ namespace oofem {
     return nullptr;
   }
 
-<<<<<<< HEAD
-=======
-
-
-
->>>>>>> 717f88b0ad3286b8b1e1e4c9c0f8411056d5a425
   void
   LatticeFrameSteelPlastic::performRegularReturn(FloatArrayF< 4 > &stress,					       
 						 double yieldValue,
@@ -465,13 +361,7 @@ namespace oofem {
     //initiate residuals
     FloatArrayF< 5 >residuals;
     residuals.at(5) = yieldValue;
-<<<<<<< HEAD
     double normOfResiduals  = 1.; //just to get into the loop
-=======
-
-    double normOfResiduals  = 1.; //just to get into the loop
-
->>>>>>> 717f88b0ad3286b8b1e1e4c9c0f8411056d5a425
     int iterationCount = 0;
     while ( normOfResiduals > yieldTol ) {
       iterationCount++;
@@ -488,13 +378,8 @@ namespace oofem {
       residualsNorm.at(4) = residuals.at(4)/this->mz0;
       residualsNorm.at(5) = residuals.at(5);
 
-<<<<<<< HEAD
       normOfResiduals = norm(residualsNorm);
       printf("normofresidual=%e\n", normOfResiduals);
-=======
-
-      normOfResiduals = norm(residualsNorm);
->>>>>>> 717f88b0ad3286b8b1e1e4c9c0f8411056d5a425
       //First check if return has failed
       if ( std::isnan(normOfResiduals) ) {
 	status->letTempReturnResultBe(LatticeFrameSteelPlasticStatus::RR_NotConverged);
@@ -523,22 +408,14 @@ namespace oofem {
 
 	/* Compute the fVector*/
 	auto FVector = computeFVector(tempStress, gp, tStep);
-<<<<<<< HEAD
         double g = this->e/(2.*(1.+this->nu));
-=======
-
->>>>>>> 717f88b0ad3286b8b1e1e4c9c0f8411056d5a425
 	const double area = ( static_cast< LatticeStructuralElement * >( gp->giveElement() ) )->giveArea();
 	const double ik = ( static_cast< LatticeStructuralElement * >( gp->giveElement() ) )->giveIk();
 	const double iy = ( static_cast< LatticeStructuralElement * >( gp->giveElement() ) )->giveIy();
 	const double iz = ( static_cast< LatticeStructuralElement * >( gp->giveElement() ) )->giveIz();
 
 	residuals.at(1) = tempStress.at(1) - trialStress.at(1) + area*this->e * deltaLambda * FVector.at(1);
-<<<<<<< HEAD
 	residuals.at(2) = tempStress.at(2) - trialStress.at(2) + ik*g * deltaLambda * FVector.at(2);
-=======
-	residuals.at(2) = tempStress.at(2) - trialStress.at(2) + ik*this->e * deltaLambda * FVector.at(2);
->>>>>>> 717f88b0ad3286b8b1e1e4c9c0f8411056d5a425
 	residuals.at(3) = tempStress.at(3) - trialStress.at(3) + iy*this->e * deltaLambda * FVector.at(3);
 	residuals.at(4) = tempStress.at(4) - trialStress.at(4) + iz*this->e * deltaLambda * FVector.at(4);
 	residuals.at(5) = computeYieldValue(tempStress, gp, tStep);
@@ -560,11 +437,7 @@ namespace oofem {
   {
     auto dMMatrix = computeDMMatrix(stress, gp, tStep);
     auto fVector = computeFVector(stress, gp, tStep);
-<<<<<<< HEAD
     double g = this->e/(2.*(1.+this->nu));
-=======
-
->>>>>>> 717f88b0ad3286b8b1e1e4c9c0f8411056d5a425
     const double area = ( static_cast< LatticeStructuralElement * >( gp->giveElement() ) )->giveArea();
     const double ik = ( static_cast< LatticeStructuralElement * >( gp->giveElement() ) )->giveIk();
     const double iy = ( static_cast< LatticeStructuralElement * >( gp->giveElement() ) )->giveIy();
@@ -580,11 +453,7 @@ namespace oofem {
     jacobian.at(1, 5) = this->e*area * fVector.at(1);
     /**/
     jacobian.at(2, 1) = 0.;
-<<<<<<< HEAD
     jacobian.at(2, 2) = 1. + ik *g * deltaLambda * dMMatrix.at(2, 2);
-=======
-    jacobian.at(2, 2) = 1. + ik * this->e * deltaLambda * dMMatrix.at(2, 2);
->>>>>>> 717f88b0ad3286b8b1e1e4c9c0f8411056d5a425
     jacobian.at(2, 3) = 0.;
     jacobian.at(2, 4) = 0.;
     jacobian.at(2, 5) = ik * this->e * fVector.at(2);
@@ -593,24 +462,14 @@ namespace oofem {
     jacobian.at(3, 2) = 0.;
     jacobian.at(3, 3) = 1. + iy * this->e * deltaLambda * dMMatrix.at(3, 3);
     jacobian.at(3, 4) = 0.;
-<<<<<<< HEAD
     jacobian.at(3, 5) = iy * this->e * fVector.at(3);
-=======
-    jacobian.at(3, 5) = iy * this->e * fVector.at(2);
->>>>>>> 717f88b0ad3286b8b1e1e4c9c0f8411056d5a425
     /**/
     jacobian.at(4, 1) = 0.;
     jacobian.at(4, 2) = 0.;
     jacobian.at(4, 3) = 0.;
     jacobian.at(4, 4) = 1. + iz * this->e * deltaLambda * dMMatrix.at(4, 4);
-<<<<<<< HEAD
     jacobian.at(4, 5) = iz * this->e * fVector.at(4);
     /**/
-=======
-    jacobian.at(4, 5) = iz * this->e * fVector.at(2);
-    /**/
-
->>>>>>> 717f88b0ad3286b8b1e1e4c9c0f8411056d5a425
     jacobian.at(5, 1) = fVector.at(1);
     jacobian.at(5, 2) = fVector.at(2);
     jacobian.at(5, 3) = fVector.at(3);
@@ -618,24 +477,13 @@ namespace oofem {
     jacobian.at(5, 5) = 0.;
 
     return jacobian;
-<<<<<<< HEAD
 
   }
 
-=======
-  }
-
-
->>>>>>> 717f88b0ad3286b8b1e1e4c9c0f8411056d5a425
   FloatArrayF< 6 >
   LatticeFrameSteelPlastic::giveFrameForces3d(const FloatArrayF< 6 > &originalStrain, GaussPoint *gp, TimeStep *tStep)
   {
     auto status = static_cast< LatticeFrameSteelPlasticStatus * >( this->giveStatus(gp) );
-<<<<<<< HEAD
-=======
-    // status->initTempStatus();
-
->>>>>>> 717f88b0ad3286b8b1e1e4c9c0f8411056d5a425
     auto reducedStrain = originalStrain;
     auto thermalStrain = this->computeStressIndependentStrainVector(gp, tStep, VM_Total);
     if ( thermalStrain.giveSize() ) {
@@ -660,7 +508,6 @@ namespace oofem {
     static_cast< LatticeFrameSteelPlasticStatus * >( this->giveStatus(gp) );
 
     //Peter: Write here what shear modulus G is. It should be a function of E and nu.
-<<<<<<< HEAD
     double g = this->e/(2.*(1.+this->nu));
     //Peter: All the structural properties are read from the element
     const double area = ( static_cast< LatticeStructuralElement * >( gp->giveElement() ) )->giveArea();
@@ -669,32 +516,14 @@ namespace oofem {
     const double iz = ( static_cast< LatticeStructuralElement * >( gp->giveElement() ) )->giveIz();
     const double shearareay = ( static_cast< LatticeStructuralElement * >( gp->giveElement() ) )->giveShearAreaY();
     const double shearareaz = ( static_cast< LatticeStructuralElement * >( gp->giveElement() ) )->giveShearAreaZ();
-=======
-    double g = this->e;
-
-    //Peter: All the structural properties are read from the element
-    const double area = ( static_cast< LatticeStructuralElement * >( gp->giveElement() ) )->giveArea();
-    const double iy = ( static_cast< LatticeStructuralElement * >( gp->giveElement() ) )->giveIy();
-    const double iz = ( static_cast< LatticeStructuralElement * >( gp->giveElement() ) )->giveIz();
-    const double ik = ( static_cast< LatticeStructuralElement * >( gp->giveElement() ) )->giveIk();
-    const double shearareay = ( static_cast< LatticeStructuralElement * >( gp->giveElement() ) )->giveShearAreaY();
-    const double shearareaz = ( static_cast< LatticeStructuralElement * >( gp->giveElement() ) )->giveShearAreaZ();
-
->>>>>>> 717f88b0ad3286b8b1e1e4c9c0f8411056d5a425
     //Peter: You need to put here the correct values. Please check this. 
     FloatArrayF< 6 >d = {
       this->e * area,
       g *shearareay,
       g *shearareaz,
-<<<<<<< HEAD
       g *ik,
       this->e * iy,
       this->e * iz,
-=======
-      this->e * iy,
-      this->e * iz,
-      g *ik
->>>>>>> 717f88b0ad3286b8b1e1e4c9c0f8411056d5a425
     };
  
     return diag(d);
