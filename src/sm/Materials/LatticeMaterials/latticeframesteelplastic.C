@@ -265,7 +265,6 @@ LatticeFrameSteelPlastic::performPlasticityReturn(GaussPoint *gp, const FloatArr
 
                     OOFEM_ERROR("LatticeFrameSteelPlastic :: performPlasticityReturn - Could not reach convergence with small deltaStrain, giving up.");
                 }
-                printf("subincrementation required\n");
                 subIncrementFlag = 1;
                 deltaStrain *= 0.5;
                 tempStrain = convergedStrain + deltaStrain;
@@ -356,7 +355,6 @@ LatticeFrameSteelPlastic::performRegularReturn(FloatArrayF< 4 > &stress,
         residualsNorm.at(5) = residuals.at(5);
 
         normOfResiduals = norm(residualsNorm);
-        printf("normofresidual=%e\n", normOfResiduals);
 
         if ( std::isnan(normOfResiduals) ) {
             status->letTempReturnResultBe(LatticeFrameSteelPlasticStatus::RR_NotConverged);
