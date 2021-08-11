@@ -72,13 +72,11 @@ void
 LatticeFrame3d::computeBmatrixAt(GaussPoint *aGaussPoint, FloatMatrix &answer, int li, int ui)
 // Returns the strain matrix of the receiver.
 {
-    //Assemble Bmatrix (used to compute strains and rotations}
+    //Assemble Bmatrix (used to compute strains and rotations)
     answer.resize(6, 12);
     answer.zero();
 
-    //Peter: Wherever we use the length, we need to make sure that we have computed it.
     this->length = computeLength();
-    //this->s = computes();
 
     //Normal displacement jump in x-direction
     //First node
@@ -176,8 +174,6 @@ LatticeFrame3d::computeBmatrixAt(GaussPoint *aGaussPoint, FloatMatrix &answer, i
     answer.at(6, 11) = 0.;
     answer.at(6, 12) = 1.;
 
-    //Peter: Should the B-matrix be divided by the length? You need strain for calculating the Integration point forces. However, later you also use the transpose to calculate nodal forces. Do you need the length in both or only for calculating strain?
-    //answer.times(1. / this->length);
     return;
 }
 
@@ -242,10 +238,8 @@ LatticeFrame3d::computeStiffnessMatrix(FloatMatrix &answer, MatResponseMode rMod
     this->computeConstitutiveMatrixAt(d, rMode, integrationRulesArray [ 0 ]->getIntegrationPoint(0), tStep);
 
     dbj.beProductOf(d, bj);
-    //Peter: I divide this now by the length? However, it might need to go into the Bmatrix. Please check your derivation.
-     dbj.times(1. / length);
+    dbj.times(1. / length);
     bjt.beTranspositionOf(bj);
-    //Peter: No length here? Please check.
     answer.beProductOf(bjt, dbj);
 
     return;
@@ -262,27 +256,33 @@ void LatticeFrame3d::computeGaussPoints()
 
 
 double LatticeFrame3d::giveArea() {
-    return this->area;
+  FloatArray lc(1);
+  return this->giveCrossSection()->give(CS_Area, lc, this);
 }
 
 double LatticeFrame3d::giveIy() {
-    return this->iy;
+  FloatArray lc(1);
+  return this->giveCrossSection()->give(CS_InertiaMomentY, lc, this);
 }
 
 double LatticeFrame3d::giveIz() {
-    return this->iz;
+  FloatArray lc(1);
+  return this->giveCrossSection()->give(CS_InertiaMomentZ, lc, this);
 }
 
 double LatticeFrame3d::giveIk() {
-    return this->ik;
+  FloatArray lc(1);
+  return this->giveCrossSection()->give(CS_TorsionMomentX, lc, this);
 }
 
 double LatticeFrame3d::giveShearAreaY() {
-    return this->shearareay;
+  FloatArray lc(1);
+  return this->giveCrossSection()->give(CS_ShearAreaY, lc, this);
 }
 
 double LatticeFrame3d::giveShearAreaZ() {
-    return this->shearareaz;
+  FloatArray lc(1);
+  return this->giveCrossSection()->give(CS_ShearAreaZ, lc, this);
 }
 
 
@@ -315,20 +315,12 @@ LatticeFrame3d::giveInternalForcesVector(FloatArray &answer,
             strain.zero();
         }
         strain.beProductOf(b, u);
-	//Peter: The 1/length is outside the B-matrix, because we use B^T for computing the forces at the nodes.
 	strain.times(1./this->length);
         this->computeStressVector(stress, strain, integrationRulesArray [ 0 ]->getIntegrationPoint(0), tStep);
     }
 
     answer.beProductOf(bt, stress);
 
-    // printf("strains\n");
-    // strain.printYourself();
-
-    // printf("internal forces\n");
-    // answer.printYourself();
-
-    // if inactive update state, but no contribution to global system
     if ( !this->isActivated(tStep) ) {
         answer.zero();
         return;
@@ -452,35 +444,8 @@ LatticeFrame3d::initializeFrom(InputRecord &ir)
         throw ValueInputException(ir, _IFT_LatticeFrame3d_zaxis, "axis, reference node, or angle not set");
     }
 
-    this->area = 0.;
-    IR_GIVE_OPTIONAL_FIELD(ir, area, _IFT_LatticeFrame3d_area);
-
     this->s = 0.;
     IR_GIVE_OPTIONAL_FIELD(ir, s, _IFT_LatticeFrame3d_s);
-
-    this->iy = 0.;
-    IR_GIVE_OPTIONAL_FIELD(ir, this->iy, _IFT_LatticeFrame3d_iy);
-
-    this->iz = 0.0;
-    IR_GIVE_OPTIONAL_FIELD(ir, this->iz, _IFT_LatticeFrame3d_iz);
-
-    this->ik = 0.0;
-    IR_GIVE_OPTIONAL_FIELD(ir, this->ik, _IFT_LatticeFrame3d_ik);
-
-    double beamshearcoeff = 0.0;
-    IR_GIVE_OPTIONAL_FIELD(ir, beamshearcoeff, _IFT_LatticeFrame3d_shearcoeff);
-
-    this->shearareay = 0.0;
-    IR_GIVE_OPTIONAL_FIELD(ir, this->shearareay, _IFT_LatticeFrame3d_shearareay);
-    if ( this->shearareay == 0.0 ) {
-        this->shearareay = beamshearcoeff * area;
-    }
-
-    this->shearareaz = 0.0;
-    IR_GIVE_OPTIONAL_FIELD(ir, this->shearareaz, _IFT_LatticeFrame3d_shearareaz);
-    if ( this->shearareaz == 0.0 ) {
-        this->shearareaz = beamshearcoeff * area;
-    }
 }
 
 

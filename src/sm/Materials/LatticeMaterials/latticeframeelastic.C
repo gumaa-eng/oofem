@@ -52,12 +52,6 @@
 namespace oofem {
 REGISTER_Material(LatticeFrameElastic);
 
-// constructor which creates a dummy material without a status and without random extension interface
-// LatticeFrameElastic :: LatticeFrameElastic(int n, Domain *d) :
-//     LatticeStructuralMaterial(n, d)
-// {}
-
-
 bool
 LatticeFrameElastic::hasMaterialModeCapability(MaterialMode mode) const
 {
@@ -122,16 +116,11 @@ LatticeFrameElastic::giveFrameForces3d(const FloatArrayF< 6 > &strain,
                                        GaussPoint *gp,
                                        TimeStep *tStep)
 {
-    //Peter: This needs to be extended. I tried to implement first the elastic case. 
     auto status = static_cast< LatticeMaterialStatus * >( this->giveStatus(gp) );
 
     this->initTempStatus(gp);
     auto stiffnessMatrix = LatticeFrameElastic::give3dFrameStiffnessMatrix(ElasticStiffness, gp, tStep);
     auto stress = dot(stiffnessMatrix, strain);
-    // printf("strain:\n");
-    // strain.printYourself();
-    // printf("stress:\n");
-    // stress.printYourself();
     status->letTempLatticeStrainBe(strain);
     status->letTempLatticeStressBe(stress);
 
@@ -149,13 +138,10 @@ LatticeFrameElastic::giveInterface(InterfaceType type)
 FloatMatrixF< 6, 6 >
 LatticeFrameElastic::give3dFrameStiffnessMatrix(MatResponseMode rmode, GaussPoint *gp, TimeStep *atTime) const
 {
-    /*Peter: Gumaa, you need to enter here the part of the stiffness matrix which depend on the material parameters only. Later, you can then add the sectional parameters on the cross-section level*/
     static_cast< LatticeMaterialStatus * >( this->giveStatus(gp) );
 
-    //Peter: Write here what shear modulus G is. It should be a function of E and nu.
-    double g = this->e;
+    double g = this->e / ( 2. * ( 1. + this->nu ) );
 
-    //Peter: All the structural properties are read from the element
     const double area = ( static_cast< LatticeStructuralElement * >( gp->giveElement() ) )->giveArea();
     const double iy = ( static_cast< LatticeStructuralElement * >( gp->giveElement() ) )->giveIy();
     const double iz = ( static_cast< LatticeStructuralElement * >( gp->giveElement() ) )->giveIz();
@@ -163,16 +149,16 @@ LatticeFrameElastic::give3dFrameStiffnessMatrix(MatResponseMode rmode, GaussPoin
     const double shearareay = ( static_cast< LatticeStructuralElement * >( gp->giveElement() ) )->giveShearAreaY();
     const double shearareaz = ( static_cast< LatticeStructuralElement * >( gp->giveElement() ) )->giveShearAreaZ();
 
-    //Peter: You need to put here the correct values. Please check this. 
+    //Peter: You need to put here the correct values. Please check this.
     FloatArrayF< 6 >d = {
         this->e * area,
         g *shearareay,
         g *shearareaz,
+        g *ik,
         this->e * iy,
-        this->e * iz,
-        g *ik
+        this->e * iz
     };
- 
+
     return diag(d);
 }
 }

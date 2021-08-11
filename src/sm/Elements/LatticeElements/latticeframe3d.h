@@ -44,19 +44,12 @@
 #define _IFT_LatticeFrame3d_refangle "refangle"
 #define _IFT_LatticeFrame3d_zaxis "zaxis"
 #define _IFT_LatticeFrame3d_s "s"
-#define _IFT_LatticeFrame3d_area "area"
-#define _IFT_LatticeFrame3d_iy "iy"
-#define _IFT_LatticeFrame3d_iz "iz"
-#define _IFT_LatticeFrame3d_ik "ik"
-#define _IFT_LatticeFrame3d_shearcoeff "shearcoeff"
-#define _IFT_LatticeFrame3d_shearareay "shearareay"
-#define _IFT_LatticeFrame3d_shearareaz "shearareaz"
-
 //@}
 
 namespace oofem {
 /**
- * This class implements a 3-dimensional lattice element
+ * This class implements a 3-dimensional frame element based on rigid body spring theory presented in Toi 1991 and Toi 1993. It belongs to the group of lattice models in OOFEM.
+ * Authors: Gumaa Abdelrhim and Peter Grassl
  */
 
 class LatticeFrame3d : public LatticeStructuralElement
@@ -83,9 +76,7 @@ public:
 
     int computeGlobalCoordinates(FloatArray &answer, const FloatArray &lcoords) override;
 
-    double computeLength() override
-
-    ;
+    double computeLength() override;
 
     double giveLength() override;
 

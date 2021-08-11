@@ -59,25 +59,23 @@
 //@}
 
 namespace oofem {
-
 /**
  * This class implements associated Material Status to LatticeFrameSteelPlastic.
  * @authors: Gumaa Abdelrhim, Peter Grassl
  */
-  
+
 class LatticeFrameSteelPlasticStatus : public LatticeMaterialStatus
 {
-
 public:
 
-   enum state_flag_values {
+    enum state_flag_values {
         LatticeFrameSteelPlastic_Elastic,
         LatticeFrameSteelPlastic_Unloading,
         LatticeFrameSteelPlastic_Plastic,
     };
 
-  
-  enum LatticeFrameSteelPlastic_ReturnResult {
+
+    enum LatticeFrameSteelPlastic_ReturnResult {
         RR_NotConverged,
         RR_Converged
     };
@@ -87,7 +85,7 @@ protected:
 
     int tempReturnResult = LatticeFrameSteelPlasticStatus::RR_NotConverged;
 
-  
+
 
 public:
 
@@ -105,47 +103,46 @@ public:
 };
 
 
-  /**
+/**
  * This class implements a local random linear elastic model for lattice elements.
  */
 class LatticeFrameSteelPlastic : public LatticeStructuralMaterial
 
 {
-
 protected:
-    
-   ///Normal modulus
+
+    ///Normal modulus
     double e;
 
-   ///Ratio of shear and normal modulus
+    ///Ratio of shear and normal modulus
     double nu;
 
-   ///maximum axial force in x-axis x-axis nx0
+    ///maximum axial force in x-axis x-axis nx0
     double nx0;
 
-   ///maximum  bending moment about x-axis mx0
+    ///maximum  bending moment about x-axis mx0
     double mx0;
 
-   ///maximum  bending moment about x-axis my0
+    ///maximum  bending moment about x-axis my0
     double my0;
 
-   ///maximum  bending moment about x-axis mz0
+    ///maximum  bending moment about x-axis mz0
     double mz0;
 
-   /// yield tolerance
+    /// yield tolerance
     double yieldTol;
 
-   /// maximum number of iterations for stress return
+    /// maximum number of iterations for stress return
     double newtonIter;
 
-   ///number Of SubIncrements
+    ///number Of SubIncrements
     double numberOfSubIncrements;
-   
-   ///plastic flag
+
+    ///plastic flag
     double plasticFlag;
 
     enum LatticeFrameSteelPlastic_ReturnResult { RR_NotConverged, RR_Converged };
-   //   mutable LatticeFrameSteelPlastic_ReturnResult returnResult = RR_NotConverged; /// FIXME: This must be removed. Not thread safe. Shouldn't be stored at all.
+    //   mutable LatticeFrameSteelPlastic_ReturnResult returnResult = RR_NotConverged; /// FIXME: This must be removed. Not thread safe. Shouldn't be stored at all.
 
     double initialYieldStress = 0.;
 
@@ -167,7 +164,7 @@ public:
     FloatArrayF< 6 >performPlasticityReturn(GaussPoint *gp, const FloatArrayF< 6 > &reducedStrain, TimeStep *tStep) const;
 
     void performRegularReturn(FloatArrayF< 4 > &stress, double yieldValue, GaussPoint *gp, TimeStep *tStep) const;
-  
+
     double computeYieldValue(const FloatArrayF< 4 > &sigma, GaussPoint *gp, TimeStep *tStep) const;
 
     FloatMatrixF< 5, 5 >computeJacobian(const FloatArrayF< 4 > &sigma, const double deltaLambda, GaussPoint *gp, TimeStep *tStep) const;
@@ -183,7 +180,7 @@ public:
     bool isCharacteristicMtrxSymmetric(MatResponseMode rMode) const override { return false; }
 
     Interface *giveInterface(InterfaceType) override;
-  
+
     FloatMatrixF< 6, 6 >give3dFrameStiffnessMatrix(MatResponseMode rMode, GaussPoint *gp, TimeStep *tStep) const override;
 
     bool hasMaterialModeCapability(MaterialMode mode) const override;

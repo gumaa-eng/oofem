@@ -59,7 +59,7 @@ LatticeCrossSection::checkConsistency()
     // Checks if the given cross section material is a 'LatticeStructuralMaterial'
     Material *mat = this->giveDomain()->giveMaterial(this->materialNum);
     if ( !dynamic_cast< LatticeStructuralMaterial * >( mat ) ) {
-        OOFEM_WARNING( "material %s is not a structural interface material", mat->giveClassName() );
+        OOFEM_WARNING("material %s is not a structural interface material", mat->giveClassName() );
         return 0;
     }
 
@@ -71,10 +71,46 @@ LatticeCrossSection::initializeFrom(InputRecord &ir)
 {
     CrossSection::initializeFrom(ir);
 
+    double value;
+
     IR_GIVE_FIELD(ir, this->materialNum, _IFT_LatticeCrossSection_Material);
 
     this->materialNumber = 0;
     IR_GIVE_OPTIONAL_FIELD(ir, this->materialNumber, _IFT_LatticeCrossSection_MaterialNumber);
+
+    double area = 0.0;
+    IR_GIVE_FIELD(ir, area, _IFT_LatticeCrossSection_area);
+    propertyDictionary.add(CS_Area, area);
+
+    value = 0.0;
+    IR_GIVE_OPTIONAL_FIELD(ir, value, _IFT_LatticeCrossSection_iy);
+    propertyDictionary.add(CS_InertiaMomentY, value);
+
+    value = 0.0;
+    IR_GIVE_OPTIONAL_FIELD(ir, value, _IFT_LatticeCrossSection_iz);
+    propertyDictionary.add(CS_InertiaMomentZ, value);
+
+    value = 0.0;
+    IR_GIVE_OPTIONAL_FIELD(ir, value, _IFT_LatticeCrossSection_ik);
+    propertyDictionary.add(CS_TorsionMomentX, value);
+
+    double beamshearcoeff = 0.0;
+    IR_GIVE_OPTIONAL_FIELD(ir, beamshearcoeff, _IFT_LatticeCrossSection_shearcoeff);
+    propertyDictionary.add(CS_BeamShearCoeff, beamshearcoeff);
+
+    value = 0.0;
+    IR_GIVE_OPTIONAL_FIELD(ir, value, _IFT_LatticeCrossSection_shearareay);
+    if ( value == 0.0 ) {
+        value = beamshearcoeff * area;
+    }
+    propertyDictionary.add(CS_ShearAreaY, value);
+
+    value = 0.0;
+    IR_GIVE_OPTIONAL_FIELD(ir, value, _IFT_LatticeCrossSection_shearareaz);
+    if ( value == 0.0 ) {
+        value = beamshearcoeff * area;
+    }
+    propertyDictionary.add(CS_ShearAreaZ, value);
 }
 
 double LatticeCrossSection::giveLatticeStress1d(double strain, GaussPoint *gp, TimeStep *tStep) const
@@ -161,7 +197,7 @@ LatticeCrossSection::give(int aProperty, GaussPoint *gp) const
 Material *LatticeCrossSection::giveMaterial(IntegrationPoint *ip) const
 {
     if ( this->giveMaterialNumber() ) {
-        return this->giveDomain()->giveMaterial( this->giveMaterialNumber() );
+        return this->giveDomain()->giveMaterial(this->giveMaterialNumber() );
     } else {
         return ip->giveElement()->giveMaterial();
     }
