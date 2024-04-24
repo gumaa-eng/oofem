@@ -287,6 +287,11 @@ namespace oofem {
         this->computeVectorOf(VM_Incremental, tStep, uIncr);
         this->computeVectorOf(VM_Total, tStep, un1);
          un     = un1 - uIncr;
+	 un.zero();
+	 uIncr = un1;
+
+//         printf("displacement n:");
+//         un.printYourself();
 
         this->length   = computeLength();
         double l1 = this->length * ( 1. - this->s ) / 2;
@@ -382,33 +387,58 @@ namespace oofem {
         pjn.at(2) =  njn.at(2) + rjnpj0nj0.at(2);
         pjn.at(3) =  njn.at(3) + rjnpj0nj0.at(3);
         //
-        //Rotation matrix (Ri^n+1) of the first element (Nin-Pin) using uIncr. displacement at step n+1 (cos(theta)=1, cos(theta)= theta)
+//        //Rotation matrix (Ri^n+1) of the first element (Nin-Pin) using uIncr. displacement at step n+1 (cos(theta)=1, cos(theta)= theta)
+//        FloatMatrixF< 3, 3 >rin1;
+//        rin1.at(1, 1) =  1;
+//        rin1.at(1, 2) = - uIncr.at(6);
+//        rin1.at(1, 3) = uIncr.at(5);
+//        //
+//        rin1.at(2, 1) = uIncr.at(6)+uIncr.at(4)*uIncr.at(5);
+//        rin1.at(2, 2) = -uIncr.at(4)*uIncr.at(5)*uIncr.at(6)+1;
+//        rin1.at(2, 3) = -uIncr.at(4);
+//        //
+//        rin1.at(3, 1) = uIncr.at(4)*uIncr.at(6)-uIncr.at(5);
+//        rin1.at(3, 2) = uIncr.at(5)*uIncr.at(6)+uIncr.at(4);
+//        rin1.at(3, 3) = 1;
+//        //Rotation matrix (Rj^n+1) of the first element (Njn-Pjn) using uIncr. displacement at step n+1 (cos(theta)=1, cos(theta)= theta)
+//        FloatMatrixF< 3, 3 >rjn1;
+//        rjn1.at(1, 1) = 1;
+//        rjn1.at(1, 2) = -uIncr.at(12);
+//        rjn1.at(1, 3) = uIncr.at(11);
+//        //
+//        rjn1.at(2, 1) = uIncr.at(12)+uIncr.at(10)*uIncr.at(11);
+//        rjn1.at(2, 2) = -uIncr.at(10)*uIncr.at(11)*uIncr.at(12)+1;
+//        rjn1.at(2, 3) = -uIncr.at(10);
+//        //
+//        rjn1.at(3, 1) = uIncr.at(10)*uIncr.at(12)-uIncr.at(11);
+//        rjn1.at(3, 2) = uIncr.at(11)*uIncr.at(12)+uIncr.at(10);
+//        rjn1.at(3, 3) = 1;
+//        //
         FloatMatrixF< 3, 3 >rin1;
-        rin1.at(1, 1) =  1;
-        rin1.at(1, 2) = - uIncr.at(6);
-        rin1.at(1, 3) = uIncr.at(5);
+        rin1.at(1, 1) = cos( uIncr.at(5) )*cos(uIncr.at(6));
+        rin1.at(1, 2) = -cos( uIncr.at(5) )*sin(uIncr.at(6));
+        rin1.at(1, 3) = sin(uIncr.at(5));
         //
-        rin1.at(2, 1) = uIncr.at(6)+uIncr.at(4)*uIncr.at(5);
-        rin1.at(2, 2) = -uIncr.at(4)*uIncr.at(5)*uIncr.at(6)+1;
-        rin1.at(2, 3) = -uIncr.at(4);
+        rin1.at(2, 1) = cos(uIncr.at(4))*sin(uIncr.at(6))+sin(uIncr.at(4))*sin(uIncr.at(5))*cos(uIncr.at(6));
+        rin1.at(2, 2) = -sin(uIncr.at(4))*sin(uIncr.at(5))*sin(uIncr.at(6))+cos(uIncr.at(4))*cos(uIncr.at(6));
+        rin1.at(2, 3) = -sin(uIncr.at(4))*cos(uIncr.at(5));
         //
-        rin1.at(3, 1) = uIncr.at(4)*uIncr.at(6)-uIncr.at(5);
-        rin1.at(3, 2) = uIncr.at(5)*uIncr.at(6)+uIncr.at(4);
-        rin1.at(3, 3) = 1;
-        //Rotation matrix (Rj^n+1) of the first element (Njn-Pjn) using uIncr. displacement at step n+1 (cos(theta)=1, cos(theta)= theta)
+        rin1.at(3, 1) = sin(uIncr.at(4))*sin(uIncr.at(6))-cos(uIncr.at(4))*sin(uIncr.at(5))*cos(uIncr.at(6));
+        rin1.at(3, 2) = cos(uIncr.at(4))*sin(uIncr.at(5))*sin(uIncr.at(6))+sin(uIncr.at(4))*cos(uIncr.at(6));
+        rin1.at(3, 3) = cos(uIncr.at(4))*cos(uIncr.at(5));
+        //Rotation matrix (Rj^n) of the second element (Nj0-Pj0) using total displacement at step n
         FloatMatrixF< 3, 3 >rjn1;
-        rjn1.at(1, 1) = 1;
-        rjn1.at(1, 2) = -uIncr.at(12);
-        rjn1.at(1, 3) = uIncr.at(11);
+        rjn1.at(1, 1) = cos( uIncr.at(11) )*cos(uIncr.at(12));
+        rjn1.at(1, 2) = -cos( uIncr.at(11) )*sin(uIncr.at(12));
+        rjn1.at(1, 3) = sin(uIncr.at(11));
         //
-        rjn1.at(2, 1) = uIncr.at(12)+uIncr.at(10)*uIncr.at(11);
-        rjn1.at(2, 2) = -uIncr.at(10)*uIncr.at(11)*uIncr.at(12)+1;
-        rjn1.at(2, 3) = -uIncr.at(10);
+        rjn1.at(2, 1) = cos(uIncr.at(10))*sin(uIncr.at(12))+sin(uIncr.at(10))*sin(uIncr.at(11))*cos(uIncr.at(12));
+        rjn1.at(2, 2) = -sin(uIncr.at(10))*sin(uIncr.at(11))*sin(uIncr.at(12))+cos(uIncr.at(10))*cos(uIncr.at(12));
+        rjn1.at(2, 3) = -sin(uIncr.at(10))*cos(uIncr.at(11));
         //
-        rjn1.at(3, 1) = uIncr.at(10)*uIncr.at(12)-uIncr.at(11);
-        rjn1.at(3, 2) = uIncr.at(11)*uIncr.at(12)+uIncr.at(10);
-        rjn1.at(3, 3) = 1;
-        //
+        rjn1.at(3, 1) = sin(uIncr.at(10))*sin(uIncr.at(12))-cos(uIncr.at(10))*sin(uIncr.at(11))*cos(uIncr.at(12));
+        rjn1.at(3, 2) = cos(uIncr.at(10))*sin(uIncr.at(11))*sin(uIncr.at(12))+sin(uIncr.at(10))*cos(uIncr.at(12));
+        rjn1.at(3, 3) = cos(uIncr.at(10))*cos(uIncr.at(11));
 
         //Calculate the coordinates of point Pi^n+1 using equation Pi^n=Ni^n+uIncr+Ri^n+1(Pi^n-Ni^n).
         //First we calculate (Pi^n-Ni^n) and multiply it with Ri^n+1
@@ -456,9 +486,9 @@ namespace oofem {
         answer.at(5) = deltaT.at(2);
         answer.at(6) = deltaT.at(3);
         answer.times(1. / this->length);
-//         printf("Strain/n");
+//        printf("Strain/n");
 //         answer.printYourself();
-         answer += strain;
+	 //         answer += strain;
         //
         // FloatMatrix b;
         //  FloatArray u;
@@ -495,9 +525,10 @@ namespace oofem {
         FloatArray deltaPi, deltaPj, deltaP, pnsfi, pnsfj, answerold;
         this->computeVectorOf(VM_Incremental, tStep, uIncr);
         this->computeVectorOf(VM_Total, tStep, un1);
-        auto un     = un1 - uIncr;
-
-
+	auto un     = un1 - uIncr;
+	un.zero();
+	uIncr = un1;
+	
      //   this->computeVectorOf(VM_Incremental, tStep, u);
         this->length   = computeLength();
         GaussPoint *gp = this->integrationRulesArray [ 0 ]->getIntegrationPoint(0);
@@ -515,7 +546,7 @@ namespace oofem {
         double l2 = this->length * ( 1. + this->s ) / 2;
         FloatArray incrementalStress;
         incrementalStress.beDifferenceOf(stress, oldStress);
-
+        incrementalStress = stress;
         //Coordinates of point ni^0
         FloatArrayF< 3 >ni0;
         ni0.at(1) = 0;
@@ -606,33 +637,60 @@ namespace oofem {
         pjn.at(3) =  nj0.at(3) +un.at(9)+ rjnpj0nj0.at(3);
         //
         //Rotation matrix (Ri^n+1) of the first element (Nin-Pin) using uIncr. displacement at step n+1 (cos(theta)=1, cos(theta)= theta)
+        /* FloatMatrixF< 3, 3 >rin1; */
+        /* rin1.at(1, 1) =  1; */
+        /* rin1.at(1, 2) = - uIncr.at(6); */
+        /* rin1.at(1, 3) = uIncr.at(5); */
+        /* // */
+        /* rin1.at(2, 1) = uIncr.at(6)+uIncr.at(4)*uIncr.at(5); */
+        /* rin1.at(2, 2) = -uIncr.at(4)*uIncr.at(5)*uIncr.at(6)+1; */
+        /* rin1.at(2, 3) = -uIncr.at(4); */
+        /* // */
+        /* rin1.at(3, 1) = uIncr.at(4)*uIncr.at(6)-uIncr.at(5); */
+        /* rin1.at(3, 2) = uIncr.at(5)*uIncr.at(6)+uIncr.at(4); */
+        /* rin1.at(3, 3) = 1; */
+        /* //Rotation matrix (Rj^n+1) of the first element (Njn-Pjn) using uIncr. displacement at step n+1 (cos(theta)=1, cos(theta)= theta) */
+        /* FloatMatrixF< 3, 3 >rjn1; */
+        /* rjn1.at(1, 1) = 1; */
+        /* rjn1.at(1, 2) = -uIncr.at(12); */
+        /* rjn1.at(1, 3) = uIncr.at(11); */
+        /* // */
+        /* rjn1.at(2, 1) = uIncr.at(12)+uIncr.at(10)*uIncr.at(11); */
+        /* rjn1.at(2, 2) = -uIncr.at(10)*uIncr.at(11)*uIncr.at(12)+1; */
+        /* rjn1.at(2, 3) = -uIncr.at(10); */
+        /* // */
+        /* rjn1.at(3, 1) = uIncr.at(10)*uIncr.at(12)-uIncr.at(11); */
+        /* rjn1.at(3, 2) = uIncr.at(11)*uIncr.at(12)+uIncr.at(10); */
+        /* rjn1.at(3, 3) = 1; */
+        //
+
         FloatMatrixF< 3, 3 >rin1;
-        rin1.at(1, 1) =  1;
-        rin1.at(1, 2) = - uIncr.at(6);
-        rin1.at(1, 3) = uIncr.at(5);
+        rin1.at(1, 1) = cos( uIncr.at(5) )*cos(uIncr.at(6));
+        rin1.at(1, 2) = -cos( uIncr.at(5) )*sin(uIncr.at(6));
+        rin1.at(1, 3) = sin(uIncr.at(5));
         //
-        rin1.at(2, 1) = uIncr.at(6)+uIncr.at(4)*uIncr.at(5);
-        rin1.at(2, 2) = -uIncr.at(4)*uIncr.at(5)*uIncr.at(6)+1;
-        rin1.at(2, 3) = -uIncr.at(4);
+        rin1.at(2, 1) = cos(uIncr.at(4))*sin(uIncr.at(6))+sin(uIncr.at(4))*sin(uIncr.at(5))*cos(uIncr.at(6));
+        rin1.at(2, 2) = -sin(uIncr.at(4))*sin(uIncr.at(5))*sin(uIncr.at(6))+cos(uIncr.at(4))*cos(uIncr.at(6));
+        rin1.at(2, 3) = -sin(uIncr.at(4))*cos(uIncr.at(5));
         //
-        rin1.at(3, 1) = uIncr.at(4)*uIncr.at(6)-uIncr.at(5);
-        rin1.at(3, 2) = uIncr.at(5)*uIncr.at(6)+uIncr.at(4);
-        rin1.at(3, 3) = 1;
-        //Rotation matrix (Rj^n+1) of the first element (Njn-Pjn) using uIncr. displacement at step n+1 (cos(theta)=1, cos(theta)= theta)
+        rin1.at(3, 1) = sin(uIncr.at(4))*sin(uIncr.at(6))-cos(uIncr.at(4))*sin(uIncr.at(5))*cos(uIncr.at(6));
+        rin1.at(3, 2) = cos(uIncr.at(4))*sin(uIncr.at(5))*sin(uIncr.at(6))+sin(uIncr.at(4))*cos(uIncr.at(6));
+        rin1.at(3, 3) = cos(uIncr.at(4))*cos(uIncr.at(5));
+        //Rotation matrix (Rj^n) of the second element (Nj0-Pj0) using total displacement at step n
         FloatMatrixF< 3, 3 >rjn1;
-        rjn1.at(1, 1) = 1;
-        rjn1.at(1, 2) = -uIncr.at(12);
-        rjn1.at(1, 3) = uIncr.at(11);
+        rjn1.at(1, 1) = cos( uIncr.at(11) )*cos(uIncr.at(12));
+        rjn1.at(1, 2) = -cos( uIncr.at(11) )*sin(uIncr.at(12));
+        rjn1.at(1, 3) = sin(uIncr.at(11));
         //
-        rjn1.at(2, 1) = uIncr.at(12)+uIncr.at(10)*uIncr.at(11);
-        rjn1.at(2, 2) = -uIncr.at(10)*uIncr.at(11)*uIncr.at(12)+1;
-        rjn1.at(2, 3) = -uIncr.at(10);
+        rjn1.at(2, 1) = cos(uIncr.at(10))*sin(uIncr.at(12))+sin(uIncr.at(10))*sin(uIncr.at(11))*cos(uIncr.at(12));
+        rjn1.at(2, 2) = -sin(uIncr.at(10))*sin(uIncr.at(11))*sin(uIncr.at(12))+cos(uIncr.at(10))*cos(uIncr.at(12));
+        rjn1.at(2, 3) = -sin(uIncr.at(10))*cos(uIncr.at(11));
         //
-        rjn1.at(3, 1) = uIncr.at(10)*uIncr.at(12)-uIncr.at(11);
-        rjn1.at(3, 2) = uIncr.at(11)*uIncr.at(12)+uIncr.at(10);
-        rjn1.at(3, 3) = 1;
-        //
-        //Calculate the coordinates of point Pi^n+1 using equation Pi^n=Ni^n+uIncr+Ri^n+1(Pi^n-Ni^n).
+        rjn1.at(3, 1) = sin(uIncr.at(10))*sin(uIncr.at(12))-cos(uIncr.at(10))*sin(uIncr.at(11))*cos(uIncr.at(12));
+        rjn1.at(3, 2) = cos(uIncr.at(10))*sin(uIncr.at(11))*sin(uIncr.at(12))+sin(uIncr.at(10))*cos(uIncr.at(12));
+        rjn1.at(3, 3) = cos(uIncr.at(10))*cos(uIncr.at(11));
+
+	//Calculate the coordinates of point Pi^n+1 using equation Pi^n=Ni^n+uIncr+Ri^n+1(Pi^n-Ni^n).
         //First we calculate (Pi^n-Ni^n) and multiply it with Ri^n+1
         pinnin.beDifferenceOf(pin, nin);
         rin1pinnin.beProductOf(rin1, pinnin);
@@ -694,9 +752,9 @@ namespace oofem {
         answer.at(10) = -pnsfj.at(1)+incrementalStress.at(4);
         answer.at(11) = -pnsfj.at(2)+incrementalStress.at(5);
         answer.at(12) = -pnsfj.at(3)+incrementalStress.at(6);
-        answer += oldInternalForces;
-        printf("Force/n");
-        answer.printYourself();
+	//        answer += oldInternalForces;
+//        printf("Force/n");
+//       answer.printYourself();
 
        lmatStat->letTempInternalForcesBe(answer);
 
@@ -740,17 +798,17 @@ namespace oofem {
         coordA = nodeA->giveCoordinates();
         nodeA->giveUnknownVector(uA, dofid, VM_Total, tStep, false);
         nodeA->giveUnknownVector(uAIncr, dofid, VM_Incremental, tStep, false);
-        for (int i = 1; i <= 3; i++) {
-            coordA.at(i) += uA.at(i) - uAIncr.at(i);
-        }
+//        for (int i = 1; i <= 3; i++) {
+//            coordA.at(i) += uA.at(i) - uAIncr.at(i);
+//        }
 
         coordB = nodeB->giveCoordinates();
         nodeB->giveUnknownVector(uB, dofid, VM_Total, tStep, false);
         nodeB->giveUnknownVector(uBIncr, dofid, VM_Incremental, tStep, false);
 
-        for (int i = 1; i <= 3; i++) {
-            coordB.at(i) += uB.at(i) - uBIncr.at(i);
-        }
+//        for (int i = 1; i <= 3; i++) {
+//            coordB.at(i) += uB.at(i) - uBIncr.at(i);
+//        }
 
         lx.beDifferenceOf(coordB, coordA);
         lx.normalize();
